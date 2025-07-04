@@ -32,7 +32,6 @@ router.get(
             prn: dbUser.prn,
             role: dbUser.role,
             school: dbUser.school,
-            created_at: dbUser.created_at,
             status: user.status,
           }
         }
@@ -80,7 +79,6 @@ router.put(
             prn: updatedUser.prn,
             role: updatedUser.role,
             school: updatedUser.school,
-            created_at: updatedUser.created_at,
             status: user.status,
           }
         }

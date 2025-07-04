@@ -1,14 +1,11 @@
 import { config } from './config';
 
 export interface DatabaseUser {
-  id: string;
-  created_at: string;
-  updated_at: string;
   user_id: string;
   name: string;
-  prn: string;
+  prn: number;
   email: string;
-  password_hash: string;
+  // password_hash: string;
   role: number;
   school: string;
 }
@@ -47,24 +44,18 @@ export class DatabaseService {
   async createUser(userData: {
     stytch_user_id: string;
     name: string;
-    prn: string;
+    prn: number;
     email: string;
     role?: number;
     school?: string;
   }): Promise<DatabaseUser> {
-    const now = new Date().toISOString();
-    const docId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     
     const query = `
-      INSERT INTO users VALUES (
-        '${docId}',
-        '${now}',
-        '${now}',
+      INSERT INTO users (user_id, name, prn_number, email, role, school_id) VALUES (
         '${userData.stytch_user_id}',
         '${userData.name}',
         '${userData.prn}',
         '${userData.email}',
-        '',
         ${userData.role || 1},
         '${userData.school || ''}'
       )
@@ -73,14 +64,10 @@ export class DatabaseService {
     await this.executeQuery(query);
     
     return {
-      id: docId,
-      created_at: now,
-      updated_at: now,
       user_id: userData.stytch_user_id,
       name: userData.name,
       prn: userData.prn,
       email: userData.email,
-      password_hash: '',
       role: userData.role || 1,
       school: userData.school || ''
     };
@@ -95,16 +82,12 @@ export class DatabaseService {
       if (result.data && result.data.length > 0) {
         const user = result.data[0];
         return {
-          id: user.id,
-          created_at: user.created_at,
-          updated_at: user.updated_at,
           user_id: user.user_id,
           name: user.name,
-          prn: user.prn,
+          prn: user.prn_number,
           email: user.email,
-          password_hash: user.password_hash,
           role: user.role,
-          school: user.school
+          school: user.school_id
         };
       }
       
@@ -124,14 +107,10 @@ export class DatabaseService {
       if (result.data && result.data.length > 0) {
         const user = result.data[0];
         return {
-          id: user.id,
-          created_at: user.created_at,
-          updated_at: user.updated_at,
           user_id: user.user_id,
           name: user.name,
           prn: user.prn,
           email: user.email,
-          password_hash: user.password_hash,
           role: user.role,
           school: user.school
         };

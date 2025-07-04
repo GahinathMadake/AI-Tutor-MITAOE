@@ -1,4 +1,53 @@
-export const API_BASE = 'http://localhost:3001/api';
+export const API_BASE = `${import.meta.env.VITE_BACKEND_URL}`;
+
+
+export const ROLES = {
+  ADMIN: 1,
+  TEACHER: 2,
+  STUDENT: 3
+};
+
+export const getRoleName = (role: number): string => {
+  switch (role) {
+    case ROLES.STUDENT:
+      return 'Student';
+    case ROLES.TEACHER:
+      return 'Teacher';
+    case ROLES.ADMIN:
+      return 'Admin';
+    default:
+      return 'Unknown';
+  }
+};
+
+
+export const SCHOOLS = {
+  SCET: "School of Computer Engineering and Technology",
+  SEE: "School of Electrical Engineering",
+  SCE: "School of Chemical Engineering",
+  SHES: "School of Humanities and Engineering Sciences",
+  SMCE: "School of Mechanical and Civil Engineering",
+  SD: "School of Design"
+};
+
+export const getSchoolName = (school: string): string => {
+  switch (school) {
+    case 'SCET':
+      return SCHOOLS.SCET;
+    case 'SEE':
+      return SCHOOLS.SEE;
+    case 'SCE':
+      return SCHOOLS.SCE;
+    case 'SHES':
+      return SCHOOLS.SHES;
+    case 'SMCE':
+      return SCHOOLS.SMCE;
+    case 'SD':
+      return SCHOOLS.SD;
+    default:
+      return 'Unknown School';
+  }
+ };
 
 export const getUrlParams = (searchParams: URLSearchParams) => {
   return {

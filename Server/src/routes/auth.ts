@@ -5,6 +5,7 @@ import { config } from '../config/config';
 import { logger } from '../utils/logger';
 import { generateToken } from '../utils/jwt';
 import { asyncHandler, AppError } from '../middleware/errorHandler';
+import { authenticateToken } from '../middleware/auth';
 import { dbService } from '../config/database';
 import { 
   LoginRequest, 
@@ -102,6 +103,17 @@ router.post(
 
       const email = stytchUser.emails[0].email;
 
+      console.log('Completing signup for user:', {
+        stytch_user_id,
+        name,
+        prn,
+        email,
+        role,
+        school
+      });
+
+
+
       // Check if user already exists in database
       const existingUser = await dbService.getUserByEmail(email);
       if (existingUser) {
@@ -112,7 +124,7 @@ router.post(
       const dbUser = await dbService.createUser({
         stytch_user_id,
         name,
-        prn,
+        prn: Number(prn),
         email,
         role,
         school
@@ -136,7 +148,6 @@ router.post(
             prn: dbUser.prn,
             role: dbUser.role,
             school: dbUser.school,
-            created_at: dbUser.created_at,
             status: 'active'
           }
         }
@@ -222,7 +233,6 @@ router.post(
             prn: dbUser.prn,
             role: dbUser.role,
             school: dbUser.school,
-            created_at: dbUser.created_at,
             status: user.status,
           },
           token: jwtToken,
@@ -336,7 +346,6 @@ router.post(
             prn: dbUser.prn,
             role: dbUser.role,
             school: dbUser.school,
-            created_at: dbUser.created_at,
             status: user.status,
           },
           token: jwtToken,

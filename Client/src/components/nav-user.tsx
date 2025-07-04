@@ -1,5 +1,5 @@
 "use client"
-
+import { useNavigate } from "react-router-dom"
 import {
   User,
   ChevronsUpDown,
@@ -43,9 +43,15 @@ export function NavUser({
 
   const { logout } = useAuth();
 
+  const navigate = useNavigate();
+
   const handleLogout = async () => {
     await logout();
     window.location.href = '/auth';
+  };
+  
+  const handleProfile = () => {
+    navigate('/profile');
   };
 
   return (
@@ -88,7 +94,7 @@ export function NavUser({
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={handleProfile}>
                 <User />
                 Profile
               </DropdownMenuItem>

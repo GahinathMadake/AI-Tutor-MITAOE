@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { createContext, useState, useEffect, type ReactNode } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import type { AuthState, AuthContextType } from '../types/auth';
+import type { AuthState, AuthContextType, SignupData, ApiResponse, User } from '../types/auth';
 import { API_BASE, getUrlParams, parseStytchError } from '../utils/api';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -31,7 +31,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           isAuthenticated: true,
           isLoading: true, // Will validate token on mount
           error: '',
-          success: ''
+          success: '',
+          requiresCompletion: false
         };
       } catch (error) {
         // Clear invalid stored data
@@ -46,7 +47,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       isAuthenticated: false,
       isLoading: true,
       error: '',
-      success: ''
+      success: '',
+      requiresCompletion: false
     };
   });
 
@@ -61,7 +63,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, [authState.isAuthenticated, authState.token, authState.user]);
 
   // Check for URL token on mount and route changes
-  // Validate existing token on mount
   useEffect(() => {
     const validateAuthState = async () => {
       const searchParams = new URLSearchParams(location.search);
@@ -80,24 +81,36 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             body: JSON.stringify({ token: urlParams.token }),
           });
 
-          const data = await response.json();
+          const data: ApiResponse = await response.json();
 
           if (data.success) {
-            const { user, token } = data.data;
+            const { user, token, requires_completion } = data.data;
             
-            setAuthState(prev => ({
-              ...prev,
-              user,
-              token,
-              isAuthenticated: true,
-              success: 'Successfully authenticated via magic link!',
-              isLoading: false
-            }));
-            
-            // Navigate to dashboard and clear URL params
-            navigate('/dashboard', { replace: true });
+            if (requires_completion) {
+              setAuthState(prev => ({
+                ...prev,
+                user,
+                token: null,
+                isAuthenticated: false,
+                requiresCompletion: true,
+                success: 'Please complete your profile to continue.',
+                isLoading: false
+              }));
+              navigate('/complete-signup', { replace: true });
+            } else {
+              setAuthState(prev => ({
+                ...prev,
+                user,
+                token,
+                isAuthenticated: true,
+                requiresCompletion: false,
+                success: 'Successfully authenticated via magic link!',
+                isLoading: false
+              }));
+              navigate('/dashboard', { replace: true });
+            }
           } else {
-            const errorMessage = parseStytchError(data.error);
+            const errorMessage = parseStytchError(data.error || '');
             setAuthState(prev => ({
               ...prev,
               error: errorMessage,
@@ -128,7 +141,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           });
 
           if (response.ok) {
-            const data = await response.json();
+            const data: ApiResponse = await response.json();
             if (data.success) {
               // Token is still valid, update user data
               setAuthState(prev => ({
@@ -144,7 +157,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                 isAuthenticated: false,
                 isLoading: false,
                 error: 'Session expired. Please log in again.',
-                success: ''
+                success: '',
+                requiresCompletion: false
               });
             }
           } else {
@@ -155,7 +169,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               isAuthenticated: false,
               isLoading: false,
               error: 'Session expired. Please log in again.',
-              success: ''
+              success: '',
+              requiresCompletion: false
             });
           }
         } catch (err) {
@@ -187,7 +202,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }),
       });
 
-      const data = await response.json();
+      const data: ApiResponse = await response.json();
 
       if (data.success) {
         setAuthState(prev => ({
@@ -196,7 +211,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           isLoading: false
         }));
       } else {
-        const errorMessage = parseStytchError(data.error);
+        const errorMessage = parseStytchError(data.error || '');
         setAuthState(prev => ({
           ...prev,
           error: errorMessage,
@@ -224,23 +239,36 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         body: JSON.stringify({ token }),
       });
 
-      const data = await response.json();
+      const data: ApiResponse = await response.json();
 
       if (data.success) {
-        const { user, token } = data.data;
+        const { user, token, requires_completion } = data.data;
         
-        setAuthState(prev => ({
-          ...prev,
-          user,
-          token,
-          isAuthenticated: true,
-          success: 'Successfully authenticated!',
-          isLoading: false
-        }));
-        
-        navigate('/dashboard');
+        if (requires_completion) {
+          setAuthState(prev => ({
+            ...prev,
+            user,
+            token: null,
+            isAuthenticated: false,
+            requiresCompletion: true,
+            success: 'Please complete your profile to continue.',
+            isLoading: false
+          }));
+          navigate('/complete-signup');
+        } else {
+          setAuthState(prev => ({
+            ...prev,
+            user,
+            token,
+            isAuthenticated: true,
+            requiresCompletion: false,
+            success: 'Successfully authenticated!',
+            isLoading: false
+          }));
+          navigate('/dashboard');
+        }
       } else {
-        const errorMessage = parseStytchError(data.error);
+        const errorMessage = parseStytchError(data.error || '');
         setAuthState(prev => ({
           ...prev,
           error: errorMessage,
@@ -256,7 +284,62 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const updateProfile = async (firstName: string, lastName: string) => {
+const completeSignup = async (userData: SignupData) => {
+  if (!authState.user?.id) {
+    setAuthState(prev => ({ ...prev, error: 'No user session found. Please try logging in again.' }));
+    return;
+  }
+
+  setAuthState(prev => ({ ...prev, isLoading: true, error: '', success: '' }));
+
+  try {
+    const response = await fetch(`${API_BASE}/auth/complete-signup`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        stytch_user_id: authState.user.id,
+        name: userData.name,
+        prn: userData.prn,
+        role: userData.role,
+        school: userData.school
+      }),
+    });
+
+    const data: ApiResponse = await response.json();
+
+    if (data.success) {
+      const { user, token } = data.data;
+      
+      setAuthState(prev => ({
+        ...prev,
+        user,
+        token,
+        isAuthenticated: true,
+        requiresCompletion: false,
+        success: 'Profile completed successfully!',
+        isLoading: false
+      }));
+      
+      navigate('/dashboard');
+    } else {
+      setAuthState(prev => ({
+        ...prev,
+        error: data.error || 'Failed to complete signup',
+        isLoading: false
+      }));
+    }
+  } catch (err) {
+    setAuthState(prev => ({
+      ...prev,
+      error: 'Network error. Please try again.',
+      isLoading: false
+    }));
+  }
+};
+
+  const updateProfile = async (updates: Partial<User>) => {
     setAuthState(prev => ({ ...prev, isLoading: true, error: '', success: '' }));
 
     try {
@@ -266,13 +349,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${authState.token}`,
         },
-        body: JSON.stringify({
-          first_name: firstName,
-          last_name: lastName
-        }),
+        body: JSON.stringify(updates),
       });
 
-      const data = await response.json();
+      const data: ApiResponse = await response.json();
 
       if (data.success) {
         const updatedUser = data.data.user;
@@ -319,7 +399,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       isAuthenticated: false,
       isLoading: false,
       error: '',
-      success: ''
+      success: '',
+      requiresCompletion: false
     });
     
     navigate('/auth');
@@ -340,7 +421,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         },
       });
 
-      const data = await response.json();
+      const data: ApiResponse = await response.json();
 
       if (data.success) {
         setAuthState({
@@ -349,7 +430,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           isAuthenticated: false,
           isLoading: false,
           error: '',
-          success: 'Account deleted successfully'
+          success: 'Account deleted successfully',
+          requiresCompletion: false
         });
         
         navigate('/auth');
@@ -385,6 +467,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     ...authState,
     login,
     authenticate,
+    completeSignup,
     logout,
     updateProfile,
     deleteAccount,
