@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
 import { config } from '../config/config';
-import { JWTPayload } from '../middleware/auth';
+import { JWTPayload } from '../types/auth';
 
 export const generateToken = (userId: string, email: string): string => {
   return jwt.sign(

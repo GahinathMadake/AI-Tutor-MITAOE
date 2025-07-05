@@ -1,4 +1,3 @@
-// server/src/types/auth.ts
 import { Request } from 'express';
 
 export interface User {
@@ -39,6 +38,13 @@ export interface ApiResponse<T = any> {
   data?: T;
   error?: string;
   message?: string;
+}
+
+export interface JWTPayload {
+  userId: string;
+  email: string;
+  iat: number;
+  exp: number;
 }
 
 // Extended Stytch types for better compatibility

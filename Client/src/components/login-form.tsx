@@ -15,11 +15,8 @@ const LoginForm: React.FC = () => {
 
   // Redirect to dashboard if already authenticated
   if (isAuthenticated) {
-    console.log('User is already authenticated, redirecting to dashboard');
+    // console.log('User is already authenticated, redirecting to dashboard');
     return <Navigate to="/dashboard" replace />;
-  }
-  else{
-    console.log('User is not authenticated, showing auth page');
   }
 
   const handleSendMagicLink = async (e?: React.KeyboardEvent | React.MouseEvent) => {

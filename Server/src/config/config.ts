@@ -31,7 +31,7 @@ const validateConfig = (): Config => {
   return {
     NODE_ENV: process.env.NODE_ENV || 'development',
     PORT: parseInt(process.env.PORT || '3001', 10),
-    CLIENT_URL: process.env.CLIENT_URL || 'http://localhost:3000',
+    CLIENT_URL: process.env.CLIENT_URL || 'http://localhost:5173',
     STYTCH_PROJECT_ID: process.env.STYTCH_PROJECT_ID!,
     STYTCH_SECRET: process.env.STYTCH_SECRET!,
     STYTCH_PUBLIC_TOKEN: process.env.STYTCH_PUBLIC_TOKEN!,

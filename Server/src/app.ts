@@ -3,10 +3,12 @@ import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import { config } from './config/config';
-import { errorHandler } from './middleware/errorHandler';
+import { errorHandler } from './errors/errorHandler';
 import { logger } from './utils/logger';
-import authRoutes from './routes/auth';
-import userRoutes from './routes/user';
+
+// Route imports
+import authRoutes from './routes/auth.routes';
+import userRoutes from './routes/user.routes';
 
 const app = express();
 
@@ -19,8 +21,8 @@ app.use(cors({
 
 // Rate limiting
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
+  windowMs: 15 * 60 * 1000,
+  max: 100,
   message: 'Too many requests from this IP, please try again later.',
 });
 app.use(limiter);
@@ -41,11 +43,10 @@ app.use('/api/user', userRoutes);
 // Error handling middleware
 app.use(errorHandler);
 
-// 404 handler - Fixed the route pattern
+// 404 handler
 app.use((req, res) => {
   res.status(404).json({ error: 'Route not found' });
 });
-
 
 const PORT = config.PORT || 3001;
 

@@ -1,17 +1,9 @@
-// server/src/middleware/auth.ts
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { stytchClient } from '../config/stytch';
 import { config } from '../config/config';
 import { logger } from '../utils/logger';
-import { User, AuthenticatedRequest } from '../types/auth';
-
-export interface JWTPayload {
-  userId: string;
-  email: string;
-  iat: number;
-  exp: number;
-}
+import { User, AuthenticatedRequest, JWTPayload } from '../types/auth';
 
 export const authenticateToken = async (
   req: Request,
@@ -20,7 +12,7 @@ export const authenticateToken = async (
 ): Promise<void> => {
   try {
     const authHeader = req.headers.authorization;
-    const token = authHeader?.split(' ')[1]; // Bearer TOKEN
+    const token = authHeader?.split(' ')[1];
 
     if (!token) {
       res.status(401).json({ 
@@ -30,10 +22,8 @@ export const authenticateToken = async (
       return;
     }
 
-    // Verify JWT token
     const decoded = jwt.verify(token, config.JWT_SECRET) as JWTPayload;
     
-    // Optionally verify with Stytch (for extra security)
     try {
       const stytchUser = await stytchClient.users.get({ user_id: decoded.userId });
       
@@ -51,7 +41,6 @@ export const authenticateToken = async (
       next();
     } catch (stytchError) {
       logger.warn('Stytch user verification failed', { error: stytchError, userId: decoded.userId });
-      // Continue with JWT data if Stytch fails (graceful degradation)
       (req as AuthenticatedRequest).user = {
         id: decoded.userId,
         email: decoded.email,
