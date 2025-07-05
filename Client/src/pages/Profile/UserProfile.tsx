@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 
 import { getSchoolName } from '@/utils/api';
+import DashboardLayout from '@/components/layout/DashboardLayout';
 
 export function UserProfile() {
   const { user } = useAuth();
@@ -25,13 +26,13 @@ export function UserProfile() {
     );
   }
 
-//   const initials = user.name
-//     ?.split(' ')
-//     .map(n => n[0])
-//     .join('')
-//     .toUpperCase() ?? '';
-
   return (
+     <DashboardLayout 
+      breadcrumbItems={[
+        { label: "Dashboard", href: "/dashboard" },
+        { label: "User Profile", isCurrentPage: true }
+      ]}
+    >
     <div className="max-w-4xl mx-auto p-6">
       <Card className="overflow-hidden">
 
@@ -112,5 +113,6 @@ export function UserProfile() {
         </CardContent>
       </Card>
     </div>
+    </DashboardLayout>
   );
 }

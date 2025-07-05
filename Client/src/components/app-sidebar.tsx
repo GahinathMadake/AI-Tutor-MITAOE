@@ -25,7 +25,7 @@ import { useAuth } from '@/hooks/useAuth';
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { user } = useAuth();
-  console.log("User in AppSidebar:", user);
+  // console.log("User in AppSidebar:", user);
 
   const isStudent = user?.role === "STUDENT";
   const isTeacher = user?.role === "TEACHER";

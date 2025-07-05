@@ -51,7 +51,7 @@ export function NavUser({
   };
   
   const handleProfile = () => {
-    navigate('/profile');
+    navigate('/dashboard/profile');
   };
 
   return (
