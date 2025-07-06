@@ -453,7 +453,7 @@ const StudentDashboardContent: React.FC = () => {
                               </div>
                             </div>
                             <div className="text-right">
-                              <p className="text-lg font-bold text-blue-600">{course.progress}%</p>
+                              <p className="text-base sm:text-lg font-bold text-blue-600">{course.progress}%</p>
                               <Badge variant="secondary" className="text-xs">
                                 {course.category}
                               </Badge>

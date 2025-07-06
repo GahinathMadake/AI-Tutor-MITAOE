@@ -14,7 +14,7 @@ export const Dashboard: React.FC = () => {
         { label: "Dashboard", isCurrentPage: true }
       ]}
     >
-      <div className="max-w-7xl mx-auto p-6">
+      <div className="max-w-7xl p-6">
         {isStudent && <StudentDashboardContent />}
         {isTeacher && <TeacherDashboardContent />}
         {!isStudent && !isTeacher && (
