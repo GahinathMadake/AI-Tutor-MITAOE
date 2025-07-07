@@ -14,8 +14,8 @@
 - **Siddhant Mishra** (Developer)
 
 ### **Student Side Team** 📚
-- **ANIRUDDHA PANDEY** (Lead Developer) 
-- **Gahinath Madake** (Developer)
+- **GAHINATH MADAKE** (Lead Developer) 
+- **Aniruddha Pande** (Developer)
 
 ---
 
