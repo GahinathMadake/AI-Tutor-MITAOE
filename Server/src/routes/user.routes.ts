@@ -5,15 +5,15 @@ import { asyncHandler } from '../errors/errorHandler';
 
 const router = Router();
 
+router.use(authenticateToken);
+
 router.get(
   '/profile',
-  authenticateToken,
   asyncHandler(userController.getProfile)
 );
 
 router.put(
   '/profile',
-  authenticateToken,
   asyncHandler(userController.updateProfile)
 );
 
