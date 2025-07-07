@@ -170,7 +170,7 @@ export default function TeacherDashboardContent() {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 px-4 md:px-8 lg:px-12 py-6">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 px-4 md:px-8 lg:px-12">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-4xl font-bold bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent mb-2">

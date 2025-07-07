@@ -9,6 +9,7 @@ import { logger } from './utils/logger';
 // Route imports
 import authRoutes from './routes/auth.routes';
 import userRoutes from './routes/user.routes';
+import courseRoutes from './routes/course.routes';
 
 const app = express();
 
@@ -39,6 +40,7 @@ app.get('/health', (req, res) => {
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
+app.use('/api/courses', courseRoutes);
 
 // Error handling middleware
 app.use(errorHandler);

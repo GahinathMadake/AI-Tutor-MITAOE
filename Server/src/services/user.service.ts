@@ -1,15 +1,15 @@
-import { dbService } from '../config/database';
-import { logger } from '../utils/logger';
-import { AppError } from '../errors/ApiError';
-import { User } from '../types/auth';
+import { userdbService } from "../config/userDatabase";
+import { logger } from "../utils/logger";
+import { AppError } from "../errors/ApiError";
+import { User } from "../types/auth";
 
 export class UserService {
   async getUserProfile(userId: string, email: string) {
     try {
-      const dbUser = await dbService.getUserByEmail(email);
-      
+      const dbUser = await userdbService.getUserByEmail(email);
+
       if (!dbUser) {
-        throw new AppError('User profile not found', 404);
+        throw new AppError("User profile not found", 404);
       }
 
       return {
@@ -21,8 +21,11 @@ export class UserService {
         school: dbUser.school,
       };
     } catch (error: any) {
-      logger.error('Failed to get user profile', { error: error.message, userId });
-      throw new AppError(error.message || 'Failed to get user profile', 500);
+      logger.error("Failed to get user profile", {
+        error: error.message,
+        userId,
+      });
+      throw new AppError(error.message || "Failed to get user profile", 500);
     }
   }
 
@@ -33,14 +36,14 @@ export class UserService {
       delete updates.email;
       delete updates.user_id;
       delete updates.created_at;
-      
-      const updatedUser = await dbService.updateUser(userId, updates);
-      
+
+      const updatedUser = await userdbService.updateUser(userId, updates);
+
       if (!updatedUser) {
-        throw new AppError('User not found', 404);
+        throw new AppError("User not found", 404);
       }
 
-      logger.info('User profile updated', { userId, updates });
+      logger.info("User profile updated", { userId, updates });
 
       return {
         id: userId,
@@ -51,8 +54,11 @@ export class UserService {
         school: updatedUser.school,
       };
     } catch (error: any) {
-      logger.error('Failed to update user profile', { error: error.message, userId });
-      throw new AppError(error.message || 'Failed to update user profile', 500);
+      logger.error("Failed to update user profile", {
+        error: error.message,
+        userId,
+      });
+      throw new AppError(error.message || "Failed to update user profile", 500);
     }
   }
 }

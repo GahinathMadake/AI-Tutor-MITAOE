@@ -5,12 +5,11 @@ export interface DatabaseUser {
   name: string;
   prn: number;
   email: string;
-  // password_hash: string;
   role: number;
   school: string;
 }
 
-export class DatabaseService {
+export class UserDatabaseService {
   private apiKey: string;
   private baseUrl: string;
 
@@ -144,6 +143,7 @@ export class DatabaseService {
     await this.executeQuery(query);
     return await this.getUserByStytchId(stytchUserId);
   }
+  
 }
 
-export const dbService = new DatabaseService();
+export const userdbService = new UserDatabaseService();

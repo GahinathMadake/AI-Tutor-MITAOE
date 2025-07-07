@@ -1,14 +1,15 @@
-import { stytchClient } from '../config/stytch';
-import { dbService } from '../config/database';
-import { generateToken } from '../utils/jwt';
-import { logger } from '../utils/logger';
-import { AppError } from '../errors/ApiError';
-import { 
-  LoginRequest, 
-  AuthenticateRequest, 
+// Server/src/services/auth.service.ts
+import { stytchClient } from "../config/stytch";
+import { userdbService } from "../config/userDatabase";
+import { generateToken } from "../utils/jwt";
+import { logger } from "../utils/logger";
+import { AppError } from "../errors/ApiError";
+import {
+  LoginRequest,
+  AuthenticateRequest,
   CompleteSignupRequest,
-  User 
-} from '../types/auth';
+  User,
+} from "../types/auth";
 
 export class AuthService {
   async sendMagicLink(data: LoginRequest) {
@@ -21,58 +22,66 @@ export class AuthService {
         signup_expiration_minutes: 30,
       });
 
-      logger.info('Magic link sent successfully', { 
-        email: data.email, 
+      logger.info("Magic link sent successfully", {
+        email: data.email,
         userId: response.user_id,
-        userCreated: response.user_created 
+        userCreated: response.user_created,
       });
 
       return {
         user_id: response.user_id,
         user_created: response.user_created,
-        email_id: response.email_id
+        email_id: response.email_id,
       };
     } catch (error: any) {
-      logger.error('Failed to send magic link', { error: error.message, email: data.email });
-      throw new AppError(error.message || 'Failed to send magic link', 400);
+      logger.error("Failed to send magic link", {
+        error: error.message,
+        email: data.email,
+      });
+      throw new AppError(error.message || "Failed to send magic link", 400);
     }
   }
 
   async completeSignup(data: CompleteSignupRequest) {
     try {
-      const stytchUser = await stytchClient.users.get({ user_id: data.stytch_user_id });
-      
+      const stytchUser = await stytchClient.users.get({
+        user_id: data.stytch_user_id,
+      });
+
       if (!stytchUser.emails || stytchUser.emails.length === 0) {
-        throw new AppError('User email not found', 400);
+        throw new AppError("User email not found", 400);
       }
 
       const email = stytchUser.emails[0].email;
 
-      const existingUser = await dbService.getUserByEmail(email);
+      const existingUser = await userdbService.getUserByEmail(email);
       if (existingUser) {
-        throw new AppError('User already exists', 400);
+        throw new AppError("User already exists", 400);
       }
 
-      const dbUser = await dbService.createUser({
+      const dbUser = await userdbService.createUser({
         stytch_user_id: data.stytch_user_id,
         name: data.name,
         prn: Number(data.prn),
         email,
         role: data.role,
-        school: data.school
+        school: data.school,
       });
 
-      logger.info('User signup completed', { 
+      logger.info("User signup completed", {
         userId: data.stytch_user_id,
         email,
         name: data.name,
-        prn: data.prn 
+        prn: data.prn,
       });
 
       return dbUser;
     } catch (error: any) {
-      logger.error('Failed to complete signup', { error: error.message, stytch_user_id: data.stytch_user_id });
-      throw new AppError(error.message || 'Failed to complete signup', 400);
+      logger.error("Failed to complete signup", {
+        error: error.message,
+        stytch_user_id: data.stytch_user_id,
+      });
+      throw new AppError(error.message || "Failed to complete signup", 400);
     }
   }
 
@@ -87,19 +96,20 @@ export class AuthService {
       const email = user.emails[0]?.email;
 
       if (!email) {
-        throw new AppError('User email not found', 400);
+        throw new AppError("User email not found", 400);
       }
 
-      const dbUser = await dbService.getUserByEmail(email);
-      
+      const dbUser = await userdbService.getUserByEmail(email);
+
       if (!dbUser) {
         return {
           user: {
             id: user.user_id,
             email: email,
-            name: user.name?.first_name && user.name?.last_name 
-              ? `${user.name.first_name} ${user.name.last_name}`
-              : null,
+            name:
+              user.name?.first_name && user.name?.last_name
+                ? `${user.name.first_name} ${user.name.last_name}`
+                : null,
             created_at: user.created_at,
             status: user.status,
           },
@@ -126,8 +136,8 @@ export class AuthService {
         expires_at: session?.expires_at,
       };
     } catch (error: any) {
-      logger.error('Authentication failed', { error: error.message });
-      throw new AppError(error.message || 'Authentication failed', 401);
+      logger.error("Authentication failed", { error: error.message });
+      throw new AppError(error.message || "Authentication failed", 401);
     }
   }
 
@@ -135,11 +145,11 @@ export class AuthService {
     try {
       if (sessionId) {
         await stytchClient.sessions.revoke({ session_id: sessionId });
-        logger.info('Session revoked successfully', { sessionId });
+        logger.info("Session revoked successfully", { sessionId });
       }
       return { success: true };
     } catch (error: any) {
-      logger.error('Logout failed', { error: error.message, sessionId });
+      logger.error("Logout failed", { error: error.message, sessionId });
       return { success: true }; // Consider logout successful even if session revocation fails
     }
   }
