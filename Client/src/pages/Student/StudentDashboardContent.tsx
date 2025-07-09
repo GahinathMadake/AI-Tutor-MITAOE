@@ -23,6 +23,8 @@ import {
   Eye
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { API_BASE } from '@/utils/api';
+import type { ApiResponse } from '@/types/auth';
 
 // Static data interfaces
 interface DashboardData {
@@ -52,96 +54,6 @@ interface TimelineEvent {
   duration: number;
   totalMarks: number;
 }
-
-// Static data
-const staticDashboardData: DashboardData = {
-  testCompleted: 24,
-  questionsSolved: 1247,
-  ongoingCourses: 5,
-  completedCourses: 12
-};
-
-const staticOngoingCourses: OngoingCourse[] = [
-  {
-    id: '1',
-    name: 'Advanced Mathematics - Calculus & Linear Algebra',
-    progress: 75,
-    category: 'Mathematics',
-    instructor: 'Dr. Sarah Wilson',
-    totalLessons: 20,
-    completedLessons: 15
-  },
-  {
-    id: '2',
-    name: 'Physics - Quantum Mechanics & Modern Physics',
-    progress: 60,
-    category: 'Physics',
-    instructor: 'Prof. Michael Chen',
-    totalLessons: 18,
-    completedLessons: 11
-  },
-  {
-    id: '3',
-    name: 'Computer Science - Data Structures & Algorithms',
-    progress: 85,
-    category: 'Computer Science',
-    instructor: 'Dr. Emily Rodriguez',
-    totalLessons: 16,
-    completedLessons: 14
-  },
-  {
-    id: '4',
-    name: 'Chemistry - Organic Chemistry Fundamentals',
-    progress: 45,
-    category: 'Chemistry',
-    instructor: 'Dr. James Park',
-    totalLessons: 22,
-    completedLessons: 10
-  }
-];
-
-const staticTimelineEvents: TimelineEvent[] = [
-  {
-    id: '1',
-    name: 'Mathematics Final Exam',
-    startTime: '2025-07-10T10:00:00Z',
-    endTime: '2025-07-10T12:00:00Z',
-    status: 'upcoming',
-    subject: 'Mathematics',
-    duration: 120,
-    totalMarks: 100
-  },
-  {
-    id: '2',
-    name: 'Physics Quiz - Thermodynamics',
-    startTime: '2025-07-08T14:00:00Z',
-    endTime: '2025-07-08T15:00:00Z',
-    status: 'upcoming',
-    subject: 'Physics',
-    duration: 60,
-    totalMarks: 50
-  },
-  {
-    id: '3',
-    name: 'Chemistry Lab Test',
-    startTime: '2025-07-05T09:00:00Z',
-    endTime: '2025-07-05T11:00:00Z',
-    status: 'ongoing',
-    subject: 'Chemistry',
-    duration: 120,
-    totalMarks: 75
-  },
-  {
-    id: '4',
-    name: 'Computer Science Assignment',
-    startTime: '2025-07-03T16:00:00Z',
-    endTime: '2025-07-03T18:00:00Z',
-    status: 'completed',
-    subject: 'Computer Science',
-    duration: 120,
-    totalMarks: 80
-  }
-];
 
 // const missionVision = {
 //   mission: "To provide world-class education that empowers students to achieve their full potential through innovative learning experiences, cutting-edge technology, and personalized instruction.",
@@ -295,27 +207,76 @@ const StudentDashboardContent: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [timelineStatus, setTimelineStatus] = useState<string>("all");
   const [loadingTimeline, setLoadingTimeline] = useState<boolean>(false);
-  const { user } = useAuth();
+  const { user, token } = useAuth();
 
   const userName = user?.name;
 
   const fetchDashboardData = async (): Promise<void> => {
     setLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      setDashboardData(staticDashboardData);
-      setOngoingCourses(staticOngoingCourses);
-      setLoading(false);
-    }, 1200);
+
+    try {
+      const response = await fetch(`${API_BASE}/student/user/dashboard-data`,
+        {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch dashboard data');
+      }
+
+      const data: ApiResponse = await response.json();
+
+      if (data.success) {
+        setDashboardData(data.data.DashboardData);
+        setOngoingCourses(data.data.OngoingCourses);
+      } else {
+        console.error('API returned success: false', data);
+      }
+    }
+    catch (error) {
+      console.error('Error fetching Student dashboard data:', error);
+    }
+    finally {
+      setTimeout(() => {
+        setLoading(false);
+      }, 500);
+    }
   };
 
   const fetchTimelineEvents = async (): Promise<void> => {
     setLoadingTimeline(true);
-    // Simulate API call
-    setTimeout(() => {
-      setTimelineEvents(staticTimelineEvents);
-      setLoadingTimeline(false);
-    }, 800);
+
+    try {
+      const response = await fetch(`${API_BASE}/student/user/time-line-events`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch timeline events');
+      }
+
+      const data: ApiResponse = await response.json();
+
+      if (data.success) {
+        setTimelineEvents(data.data.timelineEvents || []); // adjust this key as per your actual response
+      } else {
+        console.error('API returned success: false', data);
+      }
+
+    } catch (error) {
+      console.error('Error fetching timeline events:', error);
+    } finally {
+      setTimeout(() => {
+        setLoadingTimeline(false);
+      }, 500);
+    }
   };
 
   const getFilteredTimelineEvents = (): TimelineEvent[] => {
@@ -325,13 +286,13 @@ const StudentDashboardContent: React.FC = () => {
       const endTime = new Date(item.endTime);
 
       switch (timelineStatus) {
-        case "upcoming": 
+        case "upcoming":
           return startTime > currentTime;
-        case "ongoing": 
+        case "ongoing":
           return startTime <= currentTime && currentTime <= endTime;
         case "completed":
           return endTime < currentTime;
-        default: 
+        default:
           return true;
       }
     });
@@ -355,7 +316,7 @@ const StudentDashboardContent: React.FC = () => {
             <CardContent className="p-6 flex flex-col sm:flex-row gap-6 sm:gap-10">
               <div className="w-full sm:w-7/12 flex flex-col gap-4">
                 <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-200">
-                  Hi {userName}! 👋<br/>
+                  Hi {userName}! 👋<br />
                   <span className="text-lg sm:text-xl font-normal text-gray-600 dark:text-gray-400">
                     What do you want to learn today?
                   </span>
@@ -370,11 +331,11 @@ const StudentDashboardContent: React.FC = () => {
               </div>
               <div className="max-w-[300px] sm:w-6/12 flex justify-center sm:justify-end">
                 <div className="w-[200px] h-[200px] bg-gradient-to-br from-blue-100 to-indigo-200 rounded-full flex items-center justify-center">
-                   <img 
-                    src={userImage} 
-                    alt="user" 
+                  <img
+                    src={userImage}
+                    alt="user"
                     className='w-[200px] sm:w-[250px] md:w-[300px] max-h-[200px] object-contain'
-                    />
+                  />
                 </div>
               </div>
             </CardContent>
@@ -556,5 +517,4 @@ const StudentDashboardContent: React.FC = () => {
     </div>
   );
 };
-
 export default StudentDashboardContent;

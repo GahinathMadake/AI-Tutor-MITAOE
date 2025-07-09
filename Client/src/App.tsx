@@ -32,8 +32,9 @@ const App: React.FC = () => {
               </ProtectedRoute>
             } 
           >
-            
+             
           </Route>
+          
           <Route 
             path="/dashboard/profile" 
             element={
@@ -41,7 +42,7 @@ const App: React.FC = () => {
                 <UserProfile />
               </ProtectedRoute>
             }
-          /> 
+          />
            
           
           {/* 404 route */}

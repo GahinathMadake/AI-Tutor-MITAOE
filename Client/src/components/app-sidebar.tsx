@@ -103,10 +103,17 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           icon: BookOpen,
           items: [
             {
-              title: "View All Courses",
+              title: "Ongoing",
+              url: "/courses/ongoing",
+            },
+            {
+              title: "Completed",
+              url: "/courses/completed",
+            },
+            {
+              title: "Enrolled Courses",
               url: "/courses/all",
-            }, 
-           ...sampleCourses,
+            },
           ],
         },
           ...baseItems,

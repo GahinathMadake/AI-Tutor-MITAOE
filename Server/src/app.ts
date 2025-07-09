@@ -10,6 +10,9 @@ import { logger } from './utils/logger';
 import authRoutes from './routes/auth.routes';
 import userRoutes from './routes/user.routes';
 
+// Student Routes
+import studentUserRoutes from './routes/student/user.routes';
+
 const app = express();
 
 // Security middleware
@@ -39,6 +42,9 @@ app.get('/health', (req, res) => {
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
+
+// Student-specific routes
+app.use('/api/student/user', studentUserRoutes);
 
 // Error handling middleware
 app.use(errorHandler);
