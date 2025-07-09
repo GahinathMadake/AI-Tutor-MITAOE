@@ -6,6 +6,8 @@ import {
   GraduationCap,
   Bell,
   Home,
+  Layout,
+  type LucideIcon,
 } from "lucide-react"
 
 import { NavMain } from "@/components/nav-main"
@@ -15,11 +17,15 @@ import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
+  SidebarGroup,
+  SidebarGroupLabel,
   SidebarHeader,
+  SidebarMenu,
   SidebarRail,
 } from "@/components/ui/sidebar"
 
 import { useAuth } from '@/hooks/useAuth';
+import { NavProjects } from "./nav-projects"
 
 
 
@@ -38,7 +44,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     },
     {
       title: "Data Structures",
-      url: "/courses/data-structures", 
+      url: "/courses/data-structures",
     },
     {
       title: "Web Development",
@@ -58,45 +64,46 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const getNavItems = () => {
     const baseItems = [
       {
+        title: "Dashboard",
+        url: "/dashboard",
+        icon: Layout,
+      },
+      {
         title: "Site Home",
         url: "/home",
         icon: Home,
         items: [
-            {
-              title: "School of Computer Engineering and Technology",
-              url: "/Site-Home/SCET",
-            }, 
-            {
-              title: "School of Electrical Engineering",
-              url: "/Site-Home/SEE",
-            },
-            {
-              title: "School of Chemical Engineering",
-              url: "/Site-Home/SCE",
-            },
-            {
-              title: "School of Humanities and Engineering Sciences",
-              url: "/Site-Home/SHES",
-            },
-            {
-              title: "School of Mechanical and Civil Engineering",
-              url: "/Site-Home/SMCE",
-            },
-            {
-              title: "School of Design",
-              url: "/Site-Home/SD",
-            },
-          ]
-      },
-      {
-        title: "Notifications",
-        url: "/notifications",
-        icon: Bell,
+          {
+            title: "School of Computer Engineering and Technology",
+            url: "/Site-Home/SCET",
+          },
+          {
+            title: "School of Electrical Engineering",
+            url: "/Site-Home/SEE",
+          },
+          {
+            title: "School of Chemical Engineering",
+            url: "/Site-Home/SCE",
+          },
+          {
+            title: "School of Humanities and Engineering Sciences",
+            url: "/Site-Home/SHES",
+          },
+          {
+            title: "School of Mechanical and Civil Engineering",
+            url: "/Site-Home/SMCE",
+          },
+          {
+            title: "School of Design",
+            url: "/Site-Home/SD",
+          },
+        ]
       },
     ];
 
     if (isStudent) {
       return [
+        ...baseItems,
         {
           title: "My Courses",
           url: "/courses",
@@ -116,7 +123,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             },
           ],
         },
-          ...baseItems,
+        {
+          title: "Notifications",
+          url: "/notifications",
+          icon: Bell,
+        },
       ];
     }
 
@@ -135,10 +146,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               title: "Add Course",
               url: "/courses/add",
             },
-             ...sampleCourses,
+            ...sampleCourses,
           ],
         },
-          ...baseItems,
+        ...baseItems,
       ];
     }
 
@@ -169,7 +180,18 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <TeamSwitcher teams={data.teams} />
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
+        <SidebarGroup className="group-data-[collapsible=icon]:hidden">
+          <SidebarGroupLabel>My Courses</SidebarGroupLabel>
+          <SidebarMenu>
+            {data.navMain.map((menu, index) => {
+              if ("items" in menu) {
+                return <NavMain key={index} item={{ ...menu, icon: menu.icon as LucideIcon }} />;
+              } else {
+                return <NavProjects key={index} item={{ name: menu.title, url: menu.url, icon: menu.icon as LucideIcon }} />;
+              }
+            })}
+          </SidebarMenu>
+        </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={data.user} />
