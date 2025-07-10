@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Progress } from "@/components/ui/progress";
 import { Badge } from '@/components/ui/badge';
@@ -6,7 +6,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from "@/components/ui/skeleton";
 import userImage from './assets/User.png';
-// import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   GraduationCap,
   HelpCircle,
@@ -22,43 +21,9 @@ import {
   User,
   Eye
 } from 'lucide-react';
+import type {TimelineEvent } from '@/types/studentDashboard';
+import { useStudentDashboard } from '@/hooks/useStudentDashboard';
 import { useAuth } from '@/hooks/useAuth';
-import { API_BASE } from '@/utils/api';
-import type { ApiResponse } from '@/types/auth';
-
-// Static data interfaces
-interface DashboardData {
-  testCompleted: number;
-  questionsSolved: number;
-  ongoingCourses: number;
-  completedCourses: number;
-}
-
-interface OngoingCourse {
-  id: string;
-  name: string;
-  progress: number;
-  category: string;
-  instructor: string;
-  totalLessons: number;
-  completedLessons: number;
-}
-
-interface TimelineEvent {
-  id: string;
-  name: string;
-  startTime: string;
-  endTime: string;
-  status: 'upcoming' | 'ongoing' | 'completed';
-  subject: string;
-  duration: number;
-  totalMarks: number;
-}
-
-// const missionVision = {
-//   mission: "To provide world-class education that empowers students to achieve their full potential through innovative learning experiences, cutting-edge technology, and personalized instruction.",
-//   vision: "To be the leading educational platform that transforms lives by making quality education accessible, engaging, and effective for learners worldwide."
-// };
 
 // Timeline component
 const TimelineItem: React.FC<{ item: TimelineEvent }> = ({ item }) => {
@@ -201,83 +166,9 @@ const DashboardLoading: React.FC = () => {
 
 // Main Dashboard component
 const StudentDashboardContent: React.FC = () => {
-  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
-  const [ongoingCourses, setOngoingCourses] = useState<OngoingCourse[]>([]);
-  const [timelineEvents, setTimelineEvents] = useState<TimelineEvent[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [timelineStatus, setTimelineStatus] = useState<string>("all");
-  const [loadingTimeline, setLoadingTimeline] = useState<boolean>(false);
-  const { user, token } = useAuth();
+  const {dashboardData, ongoingCourses, loading, timelineEvents, loadingTimeline, setTimelineStatus, timelineStatus, fetchTimelineEvents} = useStudentDashboard();
 
-  const userName = user?.name;
-
-  const fetchDashboardData = async (): Promise<void> => {
-    setLoading(true);
-
-    try {
-      const response = await fetch(`${API_BASE}/student/user/dashboard-data`,
-        {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch dashboard data');
-      }
-
-      const data: ApiResponse = await response.json();
-
-      if (data.success) {
-        setDashboardData(data.data.DashboardData);
-        setOngoingCourses(data.data.OngoingCourses);
-      } else {
-        console.error('API returned success: false', data);
-      }
-    }
-    catch (error) {
-      console.error('Error fetching Student dashboard data:', error);
-    }
-    finally {
-      setTimeout(() => {
-        setLoading(false);
-      }, 500);
-    }
-  };
-
-  const fetchTimelineEvents = async (): Promise<void> => {
-    setLoadingTimeline(true);
-
-    try {
-      const response = await fetch(`${API_BASE}/student/user/time-line-events`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch timeline events');
-      }
-
-      const data: ApiResponse = await response.json();
-
-      if (data.success) {
-        setTimelineEvents(data.data.timelineEvents || []); // adjust this key as per your actual response
-      } else {
-        console.error('API returned success: false', data);
-      }
-
-    } catch (error) {
-      console.error('Error fetching timeline events:', error);
-    } finally {
-      setTimeout(() => {
-        setLoadingTimeline(false);
-      }, 500);
-    }
-  };
+   const userName = useAuth().user?.name || "Student";
 
   const getFilteredTimelineEvents = (): TimelineEvent[] => {
     return timelineEvents.filter((item) => {
@@ -297,11 +188,6 @@ const StudentDashboardContent: React.FC = () => {
       }
     });
   };
-
-  useEffect(() => {
-    fetchDashboardData();
-    fetchTimelineEvents();
-  }, []);
 
   if (loading) {
     return <DashboardLoading />;
@@ -428,26 +314,6 @@ const StudentDashboardContent: React.FC = () => {
                 )}
               </CardContent>
             </Card>
-
-            {/* Mission & Vision */}
-            {/* <Card className="shadow-lg border-0">
-              <CardHeader>
-                <CardTitle className="text-xl font-bold flex items-center gap-2">
-                  <Award className="h-5 w-5 text-purple-600" />
-                  Mission & Vision
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg">
-                  <h3 className="font-semibold text-lg text-blue-900 mb-2">Our Mission</h3>
-                  <p className="text-sm text-blue-800">{missionVision.mission}</p>
-                </div>
-                <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-4 rounded-lg">
-                  <h3 className="font-semibold text-lg text-purple-900 mb-2">Our Vision</h3>
-                  <p className="text-sm text-purple-800">{missionVision.vision}</p>
-                </div>
-              </CardContent>
-            </Card> */}
           </div>
 
           {/* Timeline */}

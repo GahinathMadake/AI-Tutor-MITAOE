@@ -12,6 +12,9 @@ import userRoutes from './routes/user.routes';
 
 // Student Routes
 import studentUserRoutes from './routes/student/user.routes';
+import studentSchoolRoutes from './routes/student/school.routes';
+import studentSemesterRoutes from './routes/student/semester.routes';
+import studentCoursesRoutes from './routes/student/course.routes';
 
 const app = express();
 
@@ -23,19 +26,19 @@ app.use(cors({
 }));
 
 // Rate limiting
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 100,
-  message: 'Too many requests from this IP, please try again later.',
-});
-app.use(limiter);
+// const limiter = rateLimit({
+//   windowMs: 15 * 60 * 1000,
+//   max: 100,
+//   message: 'Too many requests from this IP, please try again later.',
+// });
+// app.use(limiter);
 
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
 // Health check endpoint
-app.get('/health', (req, res) => {
+app.get('/api/health', (req, res) => {
   res.status(200).json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
@@ -45,6 +48,10 @@ app.use('/api/user', userRoutes);
 
 // Student-specific routes
 app.use('/api/student/user', studentUserRoutes);
+app.use('/api/student/school', studentSchoolRoutes);
+app.use('/api/student/semester', studentSemesterRoutes);
+app.use('/api/student/course', studentCoursesRoutes);
+
 
 // Error handling middleware
 app.use(errorHandler);

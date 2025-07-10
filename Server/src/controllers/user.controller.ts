@@ -31,7 +31,7 @@ export class UserController {
 }
 
 // StudentController
-export class StudentController {
+class StudentController {
 
   async getStudentDashboardData(req: AuthenticatedRequest, res: Response) {
 

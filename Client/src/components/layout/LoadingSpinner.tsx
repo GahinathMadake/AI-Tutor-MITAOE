@@ -13,3 +13,15 @@ const LoadingSpinner: React.FC = () => {
 };
 
 export default LoadingSpinner;
+
+
+export const LoadingSpinnerWithoutHight: React.FC = () => {
+  return (
+    <div className="flex items-center justify-center">
+      <div className="text-center">
+        <Loader2 className="h-8 w-8 animate-spin mx-auto text-blue-600" />
+        <p className="mt-2 text-gray-600">Loading...</p>
+      </div>
+    </div>
+  );
+};

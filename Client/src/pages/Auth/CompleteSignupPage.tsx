@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -171,7 +171,7 @@ const CompleteSignupPage: React.FC = () => {
 
         {/* Footer */}
         <div className="text-center text-sm text-gray-500">
-          <p>Already have an account? <a href="/auth" className="text-blue-600 hover:underline">Sign in</a></p>
+          <p>Already have an account? <Link to="/auth" className="text-blue-600 hover:underline">Sign in</Link></p>
         </div>
       </div>
     </div>

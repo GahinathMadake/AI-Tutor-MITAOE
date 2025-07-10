@@ -8,46 +8,68 @@ import {UserProfile} from './pages/Profile/UserProfile';
 import NotFoundPage from './pages/NotFoundPage';
 import ProtectedRoute from './components/layout/ProtectedRoute';
 import { ThemeProvider } from "@/components/theme-provider"
+import { StudentDashboardProvider } from './context/StudentDashboardContext';
+import SiteHome, { CourseEnroll } from './pages/Student/SiteHome';
 
 const App: React.FC = () => {
   return (
     <Router>
       <ThemeProvider>
       <AuthProvider>
-        <Routes>
-          {/* Redirect root to auth */}
-          <Route path="/" element={<Navigate to="/auth" replace />} />
-          
-          {/* Public routes */}
-          <Route path="/auth" element={<AuthPage />} />
-          <Route path="/auth/authenticate" element={<AuthPage />} />
-          <Route path="/complete-signup" element={<CompleteSignupPage />} />
+        <StudentDashboardProvider>
+          <Routes>
+            {/* Redirect root to auth */}
+            <Route path="/" element={<Navigate to="/auth" replace />} />
+            
+            {/* Public routes */}
+            <Route path="/auth" element={<AuthPage />} />
+            <Route path="/auth/authenticate" element={<AuthPage />} />
+            <Route path="/complete-signup" element={<CompleteSignupPage />} />
 
-          {/* Protected routes */}
-          <Route 
-            path="/dashboard" 
-            element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            } 
-          >
-             
-          </Route>
-          
-          <Route 
-            path="/dashboard/profile" 
-            element={
-              <ProtectedRoute>
-                <UserProfile />
-              </ProtectedRoute>
-            }
-          />
-           
-          
-          {/* 404 route */}
-          <Route path="*" element={<NotFoundPage />} />
-        </Routes>
+            {/* Protected routes */}
+            <Route 
+              path="/dashboard" 
+              element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              } 
+            > 
+            </Route>
+
+            {/* Student SiteHome */}
+            <Route 
+              path="/Site-Home/:schoolId" 
+              element={
+                <ProtectedRoute>
+                  <SiteHome />
+                </ProtectedRoute>
+              } 
+            />
+
+            <Route 
+              path="/Site-Home/:schoolId/enroll/:courseId" 
+              element={
+                <ProtectedRoute>
+                  <CourseEnroll />
+                </ProtectedRoute>
+              } 
+            />
+            
+            <Route 
+              path="/dashboard/profile" 
+              element={
+                <ProtectedRoute>
+                  <UserProfile />
+                </ProtectedRoute>
+              }
+            />
+            
+            
+            {/* 404 route */}
+            <Route path="*" element={<NotFoundPage />} />
+          </Routes>
+        </StudentDashboardProvider>
       </AuthProvider>
       </ThemeProvider>
     </Router>
