@@ -3,8 +3,8 @@ import { Link } from "react-router-dom";
 import CountdownTimer from "./CountDownTimer";
 import { Button } from "@/components/ui/button";
 import { Clock4, CalendarDays, CalendarCheck } from "lucide-react";
-import { TestStatus } from "@/Interfaces/Database";
-import { useUser } from "@/hooks/userContext";
+import type { TestStatus } from "@/types/database"; 
+import { useAuth } from "@/hooks/useAuth";
 
 interface TestData {
   testId?:string;
@@ -16,11 +16,9 @@ interface TestData {
 }
 
 const ComingSoon: React.FC<TestData> = ({ heading, duration, startTime, endTime, testStatuses, testId }) => {
-  const {userId} = useUser();
+  const {user} = useAuth();
 
-  console.log(testStatuses);
-
-  const testGiven = testStatuses?.some(status => status.studentId === userId);
+  const testGiven = testStatuses?.some(status => status.studentId === user?.id);
   const upcoming = new Date() < new Date(startTime);
   const timer = {
       heading: upcoming ?

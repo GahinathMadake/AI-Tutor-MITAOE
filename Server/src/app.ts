@@ -15,6 +15,7 @@ import studentUserRoutes from './routes/student/user.routes';
 import studentSchoolRoutes from './routes/student/school.routes';
 import studentSemesterRoutes from './routes/student/semester.routes';
 import studentCoursesRoutes from './routes/student/course.routes';
+import studentTestRoutes from './routes/student/test.routes';
 
 const app = express();
 
@@ -51,6 +52,7 @@ app.use('/api/student/user', studentUserRoutes);
 app.use('/api/student/school', studentSchoolRoutes);
 app.use('/api/student/semester', studentSemesterRoutes);
 app.use('/api/student/course', studentCoursesRoutes);
+app.use('/api/student/test', studentTestRoutes);
 
 
 // Error handling middleware

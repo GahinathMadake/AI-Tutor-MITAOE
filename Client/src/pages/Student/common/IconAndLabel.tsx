@@ -1,4 +1,4 @@
-import { LucideIcon } from 'lucide-react';
+import { type LucideIcon } from 'lucide-react';
 import React from 'react';
 
 interface IconLabelData{
@@ -9,7 +9,6 @@ interface IconLabelData{
 interface IconLabelProps{
     item:IconLabelData,
 }
-
 
 const IconAndLabel: React.FC<IconLabelProps> = ({item}) => { 
   return (

@@ -17,4 +17,14 @@ router.get(
   asyncHandler(studentCoursesController.EnrollMeInTheCourse)
 );
 
+router.get(
+  '/get-user-course-by-progress/:Progress',
+  asyncHandler(studentCoursesController.getCoursesByProgress)
+);
+
+router.get(
+  '/get-whole-course',
+  asyncHandler(studentCoursesController.getWholeCourseByID)
+);
+
 export default router;

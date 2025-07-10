@@ -10,6 +10,8 @@ import ProtectedRoute from './components/layout/ProtectedRoute';
 import { ThemeProvider } from "@/components/theme-provider"
 import { StudentDashboardProvider } from './context/StudentDashboardContext';
 import SiteHome, { CourseEnroll } from './pages/Student/SiteHome';
+import Courses, { SingleCourse } from './pages/Student/Courses';
+import TakeTest from './pages/Student/TakeTest';
 
 const App: React.FC = () => {
   return (
@@ -37,7 +39,7 @@ const App: React.FC = () => {
             > 
             </Route>
 
-            {/* Student SiteHome */}
+            {/* Student Side Routes */}
             <Route 
               path="/Site-Home/:schoolId" 
               element={
@@ -55,7 +57,46 @@ const App: React.FC = () => {
                 </ProtectedRoute>
               } 
             />
-            
+
+            <Route 
+              path="/courses/:progress" 
+              element={
+                <ProtectedRoute>
+                  <Courses />
+                </ProtectedRoute>
+              } 
+            />
+
+            <Route 
+              path="student/course/:courseId" 
+              element={
+                <ProtectedRoute>
+                  <SingleCourse />
+                </ProtectedRoute>
+              } 
+            />
+
+            <Route 
+              path="student/course/:courseId" 
+              element={
+                <ProtectedRoute>
+                  <SingleCourse />
+                </ProtectedRoute>
+              } 
+            />
+ 
+            <Route 
+              path="/student/user/course/test/:testId" 
+              element={
+                <ProtectedRoute>
+                  <TakeTest />
+                </ProtectedRoute>
+              }
+            />
+
+
+            {/* ------------------ Common Routes ------------------ */}
+
             <Route 
               path="/dashboard/profile" 
               element={

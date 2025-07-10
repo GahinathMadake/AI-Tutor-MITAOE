@@ -117,7 +117,7 @@ export const CourseEnroll = () => {
         <DashboardLayout
             breadcrumbItems={[
                 { label: "Dashboard", isCurrentPage: false, href: "/dashboard" },
-                { label: "Site Home", isCurrentPage: false, href: `/Site-Home/${schoolId}` },
+                { label: "Site-Home", isCurrentPage: false, href: `/Site-Home/${schoolId}` },
                 { label: `${schoolId}`, isCurrentPage: false, href: `/Site-Home/${schoolId}` },
                 { label: `Enroll`, isCurrentPage: true },
                 { label: `${courseId}`, isCurrentPage: true, },
@@ -457,7 +457,7 @@ const SiteHome: React.FC = () => {
         <DashboardLayout
             breadcrumbItems={[
                 { label: "Dashboard", isCurrentPage: false, href: "/dashboard" },
-                { label: "Site Home", isCurrentPage: false },
+                { label: "Site-Home", isCurrentPage: false },
                 { label: `${schoolId}`, isCurrentPage: true },
             ]}
         >
