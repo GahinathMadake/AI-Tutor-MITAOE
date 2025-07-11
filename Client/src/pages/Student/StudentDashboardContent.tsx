@@ -168,7 +168,7 @@ const DashboardLoading: React.FC = () => {
 const StudentDashboardContent: React.FC = () => {
   const {dashboardData, ongoingCourses, loading, timelineEvents, loadingTimeline, setTimelineStatus, timelineStatus, fetchTimelineEvents} = useStudentDashboard();
 
-   const userName = useAuth().user?.name || "Student";
+  const userName = useAuth().user?.name || "Student";
 
   const getFilteredTimelineEvents = (): TimelineEvent[] => {
     return timelineEvents.filter((item) => {
@@ -295,14 +295,14 @@ const StudentDashboardContent: React.FC = () => {
                                 </span>
                                 <span className="flex items-center gap-1">
                                   <Eye className="h-3 w-3" />
-                                  {course.completedLessons}/{course.totalLessons} lessons
+                                  {course.completedTests}/{course.totalTests} tests
                                 </span>
                               </div>
                             </div>
                             <div className="text-right">
                               <p className="text-base sm:text-lg font-bold text-blue-600">{course.progress}%</p>
                               <Badge variant="secondary" className="text-xs">
-                                {course.category}
+                                {course.schoolID}
                               </Badge>
                             </div>
                           </div>

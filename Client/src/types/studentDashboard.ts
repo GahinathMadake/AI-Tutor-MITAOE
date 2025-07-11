@@ -10,10 +10,10 @@ export interface OngoingCourse {
   id: string;
   name: string;
   progress: number;
-  category: string;
+  schoolID: string;
   instructor: string;
-  totalLessons: number;
-  completedLessons: number;
+  totalTests: number;
+  completedTests: number;
 }
 
 export interface TimelineEvent {
