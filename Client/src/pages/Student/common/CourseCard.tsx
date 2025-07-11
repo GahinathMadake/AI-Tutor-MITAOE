@@ -1,5 +1,5 @@
 import React from "react";
-import IconAndLabel from '../common/IconAndLabel';
+import IconAndLabel from './IconAndLabel';
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import courseImage from '../assets/Teaching-Data-Structures-and-Algorithms.jpg';
 import { LayoutGrid, User} from 'lucide-react';

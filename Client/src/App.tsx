@@ -12,6 +12,7 @@ import { StudentDashboardProvider } from './context/StudentDashboardContext';
 import SiteHome, { CourseEnroll } from './pages/Student/SiteHome';
 import Courses, { SingleCourse } from './pages/Student/Courses';
 import TakeTest from './pages/Student/TakeTest';
+import TestPage, { TestPageHelper } from './pages/Student/TestPage';
 
 const App: React.FC = () => {
   return (
@@ -76,14 +77,6 @@ const App: React.FC = () => {
               } 
             />
 
-            <Route 
-              path="student/course/:courseId" 
-              element={
-                <ProtectedRoute>
-                  <SingleCourse />
-                </ProtectedRoute>
-              } 
-            />
  
             <Route 
               path="/student/user/course/test/:testId" 
@@ -93,6 +86,26 @@ const App: React.FC = () => {
                 </ProtectedRoute>
               }
             />
+
+            <Route 
+              path="/exam/test/:testId" 
+              element={
+                <ProtectedRoute>
+                  <TestPageHelper />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route 
+              path="/exam/test/:testId/attempt" 
+              element={
+                <ProtectedRoute>
+                  <TestPage />
+                </ProtectedRoute>
+              }
+            />
+
+
 
 
             {/* ------------------ Common Routes ------------------ */}

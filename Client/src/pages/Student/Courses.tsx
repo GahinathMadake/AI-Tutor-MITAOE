@@ -1,6 +1,6 @@
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useEffect } from "react";
-import CourseCard from "./common/Card";
+import CourseCard from "./common/CourseCard";
 import { LoadingSpinnerWithoutHight } from "@/components/layout/LoadingSpinner";
 import { useState } from "react";
 import { Separator } from "@/components/ui/separator";

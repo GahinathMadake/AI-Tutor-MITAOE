@@ -17,4 +17,24 @@ router.get(
   asyncHandler(studentTestController.getTestAnalytics)
 );
 
+router.get(
+  '/get-test',
+  asyncHandler(studentTestController.getTest)
+);
+
+router.patch(
+  '/start-test',
+  asyncHandler(studentTestController.startTest)
+);
+
+router.post(
+  '/submit-test',
+  asyncHandler(studentTestController.submitTest)
+);
+
+router.post(
+  '/analyse-image',
+  asyncHandler(studentTestController.analyseImage)
+);
+
 export default router;
