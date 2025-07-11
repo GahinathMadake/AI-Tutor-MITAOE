@@ -87,29 +87,31 @@ export const WebcamCapture: React.FC<WebcamCaptureProps> = ({
         body: formData,
       });
 
+
       const result = await response.json();
 
-      const numberOfPeople = result?.data?.numberOfPeople;
-      console.log("Detected faces:", numberOfPeople);
+      if(result.data.success){
+        const numberOfPeople = result?.data?.numberOfPeople;
 
-      if (numberOfPeople !== 1) {
-        violationCountRef.current += 1;
+        if (numberOfPeople !== 1) {
+          violationCountRef.current += 1;
 
-        setOpenDialogWarning(
-          `We detected ${numberOfPeople} person(s) in the frame (expected exactly 1).\n` +
-          `Please ensure you're alone in front of the camera. Continued suspicious activity may lead to automatic test submission.`
-        );
-        setOpenDialog(true);
-
-        if (violationCountRef.current >= 5) {
-          console.warn("🚨 Too many violations. Submitting test...");
-          setCheatingReason(
-            "Test auto-submitted due to repeated camera violations during the proctored session (e.g., multiple faces detected or face not clearly visible)."
+          setOpenDialogWarning(
+            `We detected ${numberOfPeople} person(s) in the frame (expected exactly 1).\n` +
+            `Please ensure you're alone in front of the camera. Continued suspicious activity may lead to automatic test submission.`
           );
+          setOpenDialog(true);
 
-          setTimeout(() => {
-            submitTestHandller();
-          }, 2000);
+          if (violationCountRef.current >= 5) {
+            console.warn("🚨 Too many violations. Submitting test...");
+            setCheatingReason(
+              "Test auto-submitted due to repeated camera violations during the proctored session (e.g., multiple faces detected or face not clearly visible)."
+            );
+
+            setTimeout(() => {
+              submitTestHandller();
+            }, 2000);
+          }
         }
       }
 
