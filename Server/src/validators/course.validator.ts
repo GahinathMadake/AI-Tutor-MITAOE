@@ -19,28 +19,26 @@ export class CourseValidator {
       body('school_id')
         .notEmpty()
         .withMessage('School ID is required')
-        .isUUID()
-        .withMessage('School ID must be a valid UUID'),
+        .withMessage('School ID must be a valid'),
       
       body('semester_id')
         .notEmpty()
         .withMessage('Semester ID is required')
-        .isUUID()
-        .withMessage('Semester ID must be a valid UUID'),
+        .withMessage('Semester ID must be a valid'),
     ];
   }
 
   static updateCourse(): ValidationChain[] {
     return [
       param('courseId')
-        .isUUID()
-        .withMessage('Course ID must be a valid UUID'),
+        .notEmpty()
+        .withMessage('Course ID must be a valid'),
       
-      body('name')
-        .optional()
-        .isLength({ min: 2, max: 100 })
-        .withMessage('Course name must be between 2 and 100 characters')
-        .trim(),
+      // body('name')
+      //   .optional()
+      //   .isLength({ min: 2, max: 100 })
+      //   .withMessage('Course name must be between 2 and 100 characters')
+      //   .trim(),
       
       body('description')
         .optional()
@@ -60,8 +58,8 @@ export class CourseValidator {
   static getCourse(): ValidationChain[] {
     return [
       param('courseId')
-        .isUUID()
-        .withMessage('Course ID must be a valid UUID'),
+        .notEmpty()
+        .withMessage('Course ID must be a valid '),
     ];
   }
 
@@ -78,7 +76,7 @@ export class CourseValidator {
   static createChapter(): ValidationChain[] {
     return [
       param('courseId')
-        .isUUID()
+        .notEmpty()
         .withMessage('Course ID must be a valid UUID'),
       
       body('name')
@@ -93,8 +91,8 @@ export class CourseValidator {
   static updateChapter(): ValidationChain[] {
     return [
       param('chapterId')
-        .isUUID()
-        .withMessage('Chapter ID must be a valid UUID'),
+        .notEmpty()
+        .withMessage('Chapter ID must be a valid'),
       
       body('name')
         .notEmpty()
@@ -108,24 +106,24 @@ export class CourseValidator {
   static getChapter(): ValidationChain[] {
     return [
       param('chapterId')
-        .isUUID()
-        .withMessage('Chapter ID must be a valid UUID'),
+        .notEmpty()
+        .withMessage('Chapter ID must be a valid'),
     ];
   }
 
   static getChaptersByCourse(): ValidationChain[] {
     return [
       param('courseId')
-        .isUUID()
-        .withMessage('Course ID must be a valid UUID'),
+        .notEmpty()
+        .withMessage('Course ID must be a valid'),
     ];
   }
 
   static createTopic(): ValidationChain[] {
     return [
       param('chapterId')
-        .isUUID()
-        .withMessage('Chapter ID must be a valid UUID'),
+        .notEmpty()
+        .withMessage('Chapter ID must be a valid'),
       
       body('name')
         .notEmpty()
@@ -154,24 +152,24 @@ export class CourseValidator {
   static getTopic(): ValidationChain[] {
     return [
       param('topicId')
-        .isUUID()
-        .withMessage('Topic ID must be a valid UUID'),
+        .notEmpty()
+        .withMessage('Topic ID must be a valid'),
     ];
   }
 
   static getTopicsByChapter(): ValidationChain[] {
     return [
       param('chapterId')
-        .isUUID()
-        .withMessage('Chapter ID must be a valid UUID'),
+        .notEmpty()
+        .withMessage('Chapter ID must be a valid'),
     ];
   }
 
   static getCourseStructure(): ValidationChain[] {
     return [
       param('courseId')
-        .isUUID()
-        .withMessage('Course ID must be a valid UUID'),
+        .notEmpty()
+        .withMessage('Course ID must be a valid'),
     ];
   }
 

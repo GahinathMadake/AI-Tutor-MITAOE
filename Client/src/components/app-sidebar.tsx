@@ -21,10 +21,13 @@ import {
 
 import { useAuth } from '@/hooks/useAuth';
 
-
+import { useCourse } from "@/hooks/useCourse"
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { user } = useAuth();
+
+  const { courses } = useCourse();
+
   // console.log("User in AppSidebar:", user);
 
   const isStudent = user?.role === "STUDENT";
@@ -53,6 +56,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       url: "/courses/software-engineering",
     },
   ];
+
+    // Get first 5 courses from the courses data
+    const firstFiveCourses = courses?.slice(0, 5).map(course => ({
+      title: course.name, // Adjust based on your course object structure
+      url: `/dashboard/courses/${course.course_id}`, // Adjust based on your course object structure
+    })) || [];
 
   // Navigation items based on user role
   const getNavItems = () => {
@@ -122,13 +131,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           items: [
             {
               title: "View All Courses",
-              url: "/courses/all",
+              url: "/dashboard/courses",
             },
             {
               title: "Add Course",
-              url: "/courses/add",
+              url: "/dashboard/courses/create",
             },
-             ...sampleCourses,
+             ...firstFiveCourses,
           ],
         },
           ...baseItems,

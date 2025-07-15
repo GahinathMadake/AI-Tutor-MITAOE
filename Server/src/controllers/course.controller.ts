@@ -136,7 +136,7 @@ export class CourseController {
       }
 
       const updateData: UpdateCourseRequest = {
-        name: req.body.name,
+        // name: req.body.name,
         description: req.body.description,
         enrollment_key: req.body.enrollment_key
       };

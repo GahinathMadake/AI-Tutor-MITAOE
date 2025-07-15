@@ -10,6 +10,7 @@ import { logger } from './utils/logger';
 import authRoutes from './routes/auth.routes';
 import userRoutes from './routes/user.routes';
 import courseRoutes from './routes/course.routes';
+import testRoutes from './routes/test.routes';
 
 const app = express();
 
@@ -28,6 +29,7 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
+
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
@@ -41,6 +43,7 @@ app.get('/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/courses', courseRoutes);
+app.use('/api/tests', testRoutes);
 
 // Error handling middleware
 app.use(errorHandler);

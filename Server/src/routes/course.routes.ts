@@ -14,6 +14,8 @@ router.use(authenticateToken);
 // router.use(requireTeacher);
 
 // Course routes
+
+// Create a new course for a teacher
 router.post(
   '/:teacherId',
   CourseValidator.createCourse(),
@@ -21,6 +23,7 @@ router.post(
   asyncHandler(courseController.createCourse)
 );
 
+// Get all courses for a teacher
 router.get(
   '/:teacherId',
   CourseValidator.getCourses(),
@@ -28,6 +31,7 @@ router.get(
   asyncHandler(courseController.getCourses)
 );
 
+// Get a specific course by ID
 router.get(
   '/:teacherId/:courseId',
   CourseValidator.getCourse(),
@@ -35,6 +39,7 @@ router.get(
   asyncHandler(courseController.getCourse)
 );
 
+// Update a specific course by ID
 router.put(
   '/:teacherId/:courseId',
   CourseValidator.updateCourse(),
@@ -42,6 +47,7 @@ router.put(
   asyncHandler(courseController.updateCourse)
 );
 
+// Delete a specific course by ID
 router.delete(
   '/:teacherId/:courseId',
   CourseValidator.getCourse(),
@@ -49,6 +55,7 @@ router.delete(
   asyncHandler(courseController.deleteCourse)
 );
 
+// Get course by enrollment key
 router.get(
   '/:teacherId/enrollment/:enrollmentKey',
   CourseValidator.getCourseByEnrollmentKey(),
@@ -56,6 +63,7 @@ router.get(
   asyncHandler(courseController.getCourseByEnrollmentKey)
 );
 
+// Get course structure (chapters and topics) for a specific course
 router.get(
   '/:teacherId/:courseId/structure',
   CourseValidator.getCourseStructure(),
@@ -64,6 +72,8 @@ router.get(
 );
 
 // Chapter routes
+
+// Create a new chapter for a course
 router.post(
   '/:teacherId/:courseId/chapters',
   CourseValidator.createChapter(),
@@ -71,6 +81,7 @@ router.post(
   asyncHandler(courseController.createChapter)
 );
 
+// Get all chapters for a specific course
 router.get(
   '/:teacherId/:courseId/chapters',
   CourseValidator.getChaptersByCourse(),
@@ -78,6 +89,7 @@ router.get(
   asyncHandler(courseController.getChapters)
 );
 
+// Get a specific chapter by ID
 router.get(
   '/:teacherId/chapters/:chapterId',
   CourseValidator.getChapter(),
@@ -85,6 +97,7 @@ router.get(
   asyncHandler(courseController.getChapter)
 );
 
+// Update a specific chapter by ID
 router.put(
   '/:teacherId/chapters/:chapterId',
   CourseValidator.updateChapter(),
@@ -100,6 +113,8 @@ router.delete(
 );
 
 // Topic routes
+
+// Create a new topic for a specific chapter
 router.post(
   '/:teacherId/chapters/:chapterId/topics',
   CourseValidator.createTopic(),
@@ -107,6 +122,7 @@ router.post(
   asyncHandler(courseController.createTopic)
 );
 
+// Get all topics for a specific chapter
 router.get(
   '/:teacherId/chapters/:chapterId/topics',
   CourseValidator.getTopicsByChapter(),
@@ -114,6 +130,7 @@ router.get(
   asyncHandler(courseController.getTopics)
 );
 
+// Get a specific topic by ID
 router.get(
   '/:teacherId/topics/:topicId',
   CourseValidator.getTopic(),

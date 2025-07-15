@@ -38,7 +38,7 @@ export interface CreateCourseData {
 }
 
 export interface UpdateCourseData {
-  name?: string;
+  course_name?: string;
   description?: string;
   enrollment_key?: string;
 }
@@ -81,7 +81,7 @@ export class CourseDatabaseService {
   }
 
   private generateUUID(): string {
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    return 'xxxx-4xxx-yxxx-xxxxx'.replace(/[xy]/g, function(c) {
       const r = Math.random() * 16 | 0;
       const v = c == 'x' ? r : (r & 0x3 | 0x8);
       return v.toString(16);
@@ -96,24 +96,25 @@ export class CourseDatabaseService {
   async createCourse(courseData: CreateCourseData): Promise<DatabaseCourse> {
     const courseId = `course_${this.generateUUID()}`;
     const enrollmentKey = this.generateEnrollmentKey();
-    const now = new Date().toISOString();
-
+    const date = new Date();
+    const formatted = date.toLocaleString('sv-SE').replace('T', ' ');
+    // console.log('Creating course with data:', courseData , courseId, enrollmentKey, now);
     const query = `
-      INSERT INTO courses (course_id, name, description, enrollment_key, teacher_id, school_id, semester_id, created_at) 
+      INSERT INTO course (course_id, course_name, description, teacher_id, school_id, semester_id, enrollment_key, createdAt) 
       VALUES (
         '${courseId}',
         '${this.sanitizeString(courseData.name)}',
         '${courseData.description ? this.sanitizeString(courseData.description) : ''}',
-        '${enrollmentKey}',
         '${courseData.teacher_id}',
         '${courseData.school_id}',
         '${courseData.semester_id}',
-        '${now}'
+        '${enrollmentKey}',
+        '${formatted}'      
       )
     `;
 
     try {
-      await this.executeQuery(query);
+      const result = await this.executeQuery(query);
       
       return {
         course_id: courseId,
@@ -123,7 +124,8 @@ export class CourseDatabaseService {
         teacher_id: courseData.teacher_id,
         school_id: courseData.school_id,
         semester_id: courseData.semester_id,
-        created_at: now
+        created_at: result.createdAt,
+        updated_at: result.updatedAt
       };
     } catch (error) {
       throw new AppError('Failed to create course', 500);
@@ -131,7 +133,7 @@ export class CourseDatabaseService {
   }
 
   async getCourseById(courseId: string): Promise<DatabaseCourse | null> {
-    const query = `SELECT * FROM courses WHERE course_id = '${courseId}' LIMIT 1`;
+    const query = `SELECT * FROM course WHERE course_id = '${courseId}' LIMIT 1`;
     
     try {
       const result = await this.executeQuery(query);
@@ -140,14 +142,14 @@ export class CourseDatabaseService {
         const course = result.data[0];
         return {
           course_id: course.course_id,
-          name: course.name,
+          name: course.course_name,
           description: course.description,
           enrollment_key: course.enrollment_key,
           teacher_id: course.teacher_id,
           school_id: course.school_id,
           semester_id: course.semester_id,
-          created_at: course.created_at,
-          updated_at: course.updated_at
+          created_at: course.createdAt,
+          updated_at: course.updatedAt
         };
       }
       
@@ -158,7 +160,7 @@ export class CourseDatabaseService {
   }
 
   async getCoursesByTeacher(teacherId: string): Promise<DatabaseCourse[]> {
-    const query = `SELECT * FROM courses WHERE teacher_id = '${teacherId}' ORDER BY created_at DESC`;
+    const query = `SELECT * FROM course WHERE teacher_id = '${teacherId}' ORDER BY createdAt DESC`;
     
     try {
       const result = await this.executeQuery(query);
@@ -166,14 +168,14 @@ export class CourseDatabaseService {
       if (result.data && result.data.length > 0) {
         return result.data.map((course: any) => ({
           course_id: course.course_id,
-          name: course.name,
+          name: course.course_name,
           description: course.description,
           enrollment_key: course.enrollment_key,
           teacher_id: course.teacher_id,
           school_id: course.school_id,
           semester_id: course.semester_id,
-          created_at: course.created_at,
-          updated_at: course.updated_at
+          created_at: course.createdAt,
+          updated_at: course.updatedAt
         }));
       }
       
@@ -211,33 +213,49 @@ export class CourseDatabaseService {
   }
 
   async updateCourse(courseId: string, updates: UpdateCourseData): Promise<DatabaseCourse | null> {
-    const now = new Date().toISOString();
-    
-    const setClause = Object.entries(updates)
-      .filter(([key, value]) => value !== undefined && key !== 'course_id' && key !== 'created_at')
-      .map(([key, value]) => `${key} = '${this.sanitizeString(String(value))}'`)
-      .join(', ');
+      const validUpdates = Object.entries(updates)
+        .filter(([key, value]) => 
+          value !== undefined && 
+          key !== 'course_id' && 
+          key !== 'created_at'
+        );
 
-    if (!setClause) {
-      throw new AppError('No valid fields to update', 400);
-    }
+      //  const date = new Date();
+      //  const formatted = date.toLocaleString('sv-SE').replace('T', ' ');
 
-    const query = `
-      UPDATE courses 
-      SET ${setClause}, updated_at = '${now}'
-      WHERE course_id = '${courseId}'
-    `;
+      if (validUpdates.length === 0) {
+        throw new AppError('No valid fields to update', 400);
+      }
 
-    try {
-      await this.executeQuery(query);
-      return await this.getCourseById(courseId);
-    } catch (error) {
-      throw new AppError('Failed to update course', 500);
-    }
+      // Build SET clause with proper SQL escaping
+      const setClause = validUpdates
+        .map(([key, value]) => `${key} = '${this.sanitizeString(String(value))}'`)
+        .join(', ');
+      
+      // First, let's try without the timestamp update to isolate the issue
+      const query = `UPDATE course SET ${setClause} WHERE course_id = '${this.sanitizeString(courseId)}'`;
+
+      console.log('Updating course with query:', query);
+      console.log('Updating course with data:', updates, courseId);
+
+      try {
+        const result = await this.executeQuery(query);
+        console.log('Update result:', result);
+        
+        return await this.getCourseById(courseId);
+      } catch (error) {
+        console.error('Database error in updateCourse:', error);
+        
+        if (error instanceof AppError) {
+          throw error;
+        }
+        
+        throw new AppError(`Failed to update course: ${error.message}`, 500);
+      }
   }
 
   async deleteCourse(courseId: string): Promise<boolean> {
-    const query = `DELETE FROM courses WHERE course_id = '${courseId}'`;
+    const query = `DELETE FROM course WHERE course_id = '${courseId}'`;
     
     try {
       await this.executeQuery(query);
@@ -249,18 +267,18 @@ export class CourseDatabaseService {
 
   // Chapter Methods
   async createChapter(courseId: string, chapterName: string): Promise<DatabaseChapter> {
-    const chapterId = this.generateUUID();
+    const chapterId = `chapter_${this.generateUUID()}`;
     const now = new Date().toISOString();
 
     const query = `
-      INSERT INTO chapters (chapter_id, name, course_id, created_at) 
+      INSERT INTO chapter (chapter_id, chapter_name, course_id) 
       VALUES (
         '${chapterId}',
         '${this.sanitizeString(chapterName)}',
-        '${courseId}',
-        '${now}'
+        '${courseId}'
       )
     `;
+    console.log('Creating chapter with query:', query);
 
     try {
       await this.executeQuery(query);
@@ -277,7 +295,7 @@ export class CourseDatabaseService {
   }
 
   async getChaptersByCourse(courseId: string): Promise<DatabaseChapter[]> {
-    const query = `SELECT * FROM chapters WHERE course_id = '${courseId}' ORDER BY created_at ASC`;
+    const query = `SELECT * FROM chapter WHERE course_id = '${courseId}' ORDER BY createdAt ASC`;
     
     try {
       const result = await this.executeQuery(query);
@@ -285,10 +303,10 @@ export class CourseDatabaseService {
       if (result.data && result.data.length > 0) {
         return result.data.map((chapter: any) => ({
           chapter_id: chapter.chapter_id,
-          name: chapter.name,
+          name: chapter.chapter_name,
           course_id: chapter.course_id,
-          created_at: chapter.created_at,
-          updated_at: chapter.updated_at
+          created_at: chapter.createdAt,
+          updated_at: chapter.updatedAt
         }));
       }
       
@@ -299,7 +317,7 @@ export class CourseDatabaseService {
   }
 
   async getChapterById(chapterId: string): Promise<DatabaseChapter | null> {
-    const query = `SELECT * FROM chapters WHERE chapter_id = '${chapterId}' LIMIT 1`;
+    const query = `SELECT * FROM chapter WHERE chapter_id = '${chapterId}' LIMIT 1`;
     
     try {
       const result = await this.executeQuery(query);
@@ -308,10 +326,10 @@ export class CourseDatabaseService {
         const chapter = result.data[0];
         return {
           chapter_id: chapter.chapter_id,
-          name: chapter.name,
+          name: chapter.chapter_name,
           course_id: chapter.course_id,
-          created_at: chapter.created_at,
-          updated_at: chapter.updated_at
+          created_at: chapter.createdAt,
+          updated_at: chapter.updatedAt
         };
       }
       
@@ -322,11 +340,11 @@ export class CourseDatabaseService {
   }
 
   async updateChapter(chapterId: string, name: string): Promise<DatabaseChapter | null> {
-    const now = new Date().toISOString();
+    // const now = new Date().toISOString();
     
     const query = `
-      UPDATE chapters 
-      SET name = '${this.sanitizeString(name)}', updated_at = '${now}'
+      UPDATE chapter 
+      SET chapter_name = '${this.sanitizeString(name)}'
       WHERE chapter_id = '${chapterId}'
     `;
 
@@ -339,7 +357,7 @@ export class CourseDatabaseService {
   }
 
   async deleteChapter(chapterId: string): Promise<boolean> {
-    const query = `DELETE FROM chapters WHERE chapter_id = '${chapterId}'`;
+    const query = `DELETE FROM chapter WHERE chapter_id = '${chapterId}'`;
     
     try {
       await this.executeQuery(query);
@@ -351,16 +369,15 @@ export class CourseDatabaseService {
 
   // Topic Methods
   async createTopic(chapterId: string, topicName: string): Promise<DatabaseTopic> {
-    const topicId = this.generateUUID();
+    const topicId = `topic_${this.generateUUID()}`;
     const now = new Date().toISOString();
 
     const query = `
-      INSERT INTO topics (topic_id, name, chapter_id, created_at) 
+      INSERT INTO topic (topic_id, topic_name, chapter_id) 
       VALUES (
         '${topicId}',
         '${this.sanitizeString(topicName)}',
-        '${chapterId}',
-        '${now}'
+        '${chapterId}'
       )
     `;
 
@@ -379,18 +396,19 @@ export class CourseDatabaseService {
   }
 
   async getTopicsByChapter(chapterId: string): Promise<DatabaseTopic[]> {
-    const query = `SELECT * FROM topics WHERE chapter_id = '${chapterId}' ORDER BY created_at ASC`;
+    const query = `SELECT * FROM topic WHERE chapter_id = '${chapterId}' ORDER BY createdAt ASC`;
     
+
     try {
       const result = await this.executeQuery(query);
       
       if (result.data && result.data.length > 0) {
         return result.data.map((topic: any) => ({
           topic_id: topic.topic_id,
-          name: topic.name,
+          name: topic.topic_name,
           chapter_id: topic.chapter_id,
-          created_at: topic.created_at,
-          updated_at: topic.updated_at
+          created_at: topic.createdAt,
+          updated_at: topic.updatedAt
         }));
       }
       
@@ -401,7 +419,7 @@ export class CourseDatabaseService {
   }
 
   async getTopicById(topicId: string): Promise<DatabaseTopic | null> {
-    const query = `SELECT * FROM topics WHERE topic_id = '${topicId}' LIMIT 1`;
+    const query = `SELECT * FROM topic WHERE topic_id = '${topicId}' LIMIT 1`;
     
     try {
       const result = await this.executeQuery(query);
@@ -410,10 +428,10 @@ export class CourseDatabaseService {
         const topic = result.data[0];
         return {
           topic_id: topic.topic_id,
-          name: topic.name,
+          name: topic.topic_name,
           chapter_id: topic.chapter_id,
-          created_at: topic.created_at,
-          updated_at: topic.updated_at
+          created_at: topic.createdAt,
+          updated_at: topic.updatedAt
         };
       }
       

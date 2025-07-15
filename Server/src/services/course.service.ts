@@ -155,7 +155,7 @@ export class CourseService {
   async updateCourse(courseId: string, updateData: UpdateCourseRequest): Promise<CourseResponse | null> {
     try {
       const updates: UpdateCourseData = {
-        name: updateData.name,
+        // course_name: updateData.name,
         description: updateData.description,
         enrollment_key: updateData.enrollment_key
       };
