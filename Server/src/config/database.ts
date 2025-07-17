@@ -19,7 +19,7 @@ export class DatabaseService {
     this.baseUrl = 'https://api.worqhat.com/api/db';
   }
 
-  private async executeQuery(query: string): Promise<any> {
+  async executeQuery(query: string): Promise<any> {
     try {
       const response = await fetch(`${this.baseUrl}/run-query`, {
         method: 'POST',

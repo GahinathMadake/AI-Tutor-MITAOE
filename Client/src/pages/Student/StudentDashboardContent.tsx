@@ -21,7 +21,7 @@ import {
   User,
   Eye
 } from 'lucide-react';
-import type {TimelineEvent } from '@/types/studentDashboard';
+import type { TimelineEvent } from '@/types/studentDashboard';
 import { useStudentDashboard } from '@/hooks/useStudentDashboard';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -50,10 +50,22 @@ const TimelineItem: React.FC<{ item: TimelineEvent }> = ({ item }) => {
       <CardContent className="p-4">
         <div className="flex items-start justify-between mb-2">
           <h3 className="font-semibold text-sm line-clamp-2">{item.name}</h3>
-          <Badge className={`text-xs ${getStatusColor(item.status)} flex items-center gap-1`}>
-            {getStatusIcon(item.status)}
-            {item.status}
-          </Badge>
+          {(() => {
+            const now = new Date();
+            const start = new Date(item.startTime);
+            const end = new Date(item.endTime);
+
+            const status =
+              start > now ? "upcoming" : end < now ? "completed" : "ongoing";
+
+            return (
+              <Badge className={`text-xs ${getStatusColor(status)} flex items-center gap-1`}>
+                {getStatusIcon(status)}
+                {status}
+              </Badge>
+            );
+          })()}
+
         </div>
         <div className="space-y-1 text-xs text-muted-foreground">
           <div className="flex items-center gap-1">
@@ -166,7 +178,7 @@ const DashboardLoading: React.FC = () => {
 
 // Main Dashboard component
 const StudentDashboardContent: React.FC = () => {
-  const {dashboardData, ongoingCourses, loading, timelineEvents, loadingTimeline, setTimelineStatus, timelineStatus, fetchTimelineEvents} = useStudentDashboard();
+  const { dashboardData, ongoingCourses, loading, timelineEvents, loadingTimeline, setTimelineStatus, timelineStatus, fetchTimelineEvents } = useStudentDashboard();
 
   const userName = useAuth().user?.name || "Student";
 

@@ -21,7 +21,6 @@ export interface TimelineEvent {
   name: string;
   startTime: string;
   endTime: string;
-  status: 'upcoming' | 'ongoing' | 'completed';
   subject: string;
   duration: number;
   totalMarks: number;
