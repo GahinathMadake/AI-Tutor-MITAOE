@@ -361,6 +361,224 @@ interface Notification {
 }
 ```
 
+### Updated Database Tables
+
+#### 1. User Table
+```typescript
+interface User {
+  documentId: string;
+  createdAt: string; // or Date
+  updatedAt: string; // or Date
+  user_id: string;
+  name: string;
+  prn_number: number;
+  email: string;
+  role: 'STUDENT' | 'TEACHER' | 'ADMIN'; // depending on your enum/enum-like constraint
+  school_id: string;
+}
+
+```
+
+#### 2. School Table
+```typescript
+interface School {
+  documentId: string;
+  createdAt: string;
+  updatedAt: string;
+  school_id: string;
+  school_name: string;
+  creation_timestamp: string;
+}
+```
+
+#### 3. Semester Table
+```typescript
+interface Semester {
+  documentId: string;
+  createdAt: string;
+  updatedAt: string;
+  semester_id: string;
+  semester_name: string;
+  creation_timestamp: string;
+}
+```
+
+#### 4. Course Table
+```typescript
+interface Course {
+  documentId: string;
+  createdAt: string; // or Date
+  updatedAt: string; // or Date
+  course_id: string;
+  course_name: string;
+  description?: string; // optional if nullable
+  teacher_id: string; // foreign key to User
+  school_id: string;  // foreign key to School
+  semester_id: string; // foreign key to Semester
+  enrollment_key: string;
+  creation_timestamp: string; // or Date
+}
+
+```
+
+#### 5. Chapter Table
+```typescript
+interface Chapter {
+  documentId: string;
+  createdAt: string;
+  updatedAt: string;
+  chapter_id: string;
+  chapter_name: string;
+  course_id: string;
+  creation_timestamp: string;
+}
+```
+
+#### 6. Topic Table
+```typescript
+interface Topic {
+  documentId: string;
+  createdAt: string;
+  updatedAt: string;
+  topic_id: string;
+  topic_name: string;
+  chapter_id: string;
+  creation_timestamp: string;
+}
+```
+
+#### 7. Test Table
+```typescript
+interface Test {
+  documentId: string;
+  createdAt: string;
+  updatedAt: string;
+  test_id: string;
+  test_name: string;
+  total_marks: number;
+  course_id: string;
+  teacher_id: string;
+  topic_id: string;
+  creation_timestamp: string;
+  start_time: string;
+  end_time: string;
+  duration_minutes: number;
+  maximum_attempts_allowed: number;
+}
+```
+
+#### 8. Question Table
+```typescript
+interface Question {
+  documentId: string;
+  createdAt: string; // ISO timestamp
+  updatedAt: string; // ISO timestamp
+  question_id: string;
+  question_text: string;
+  difficulty_level: number;
+  question_type: 'MCQ' | 'Subjective' | 'Coding'; // extend as needed
+  options: string[]; // Only for MCQ
+  hints: string[];
+  correct_answer: string;
+  course_id: string;
+  teacher_id: string;
+  creation_timestamp: string; // ISO timestamp
+  problem_statement?: string | null;
+  input_output_format?: string | null;
+  constraints?: string[] | null;
+}
+```
+
+#### 9. TestCase Table
+```typescript
+interface TestCase {
+  documentId: string;              // Unique ID for the document
+  createdAt: string;               // ISO timestamp (e.g. "2025-07-17T10:45:00Z")
+  updatedAt: string;               // ISO timestamp
+  testcase_id: string;            // Unique test case identifier
+  question_id: string;            // The question this testcase belongs to
+  input: string;                  // Input to be passed to the student's code
+  expected_output: string;        // What the output should be
+  hidden: boolean;                // Whether the test case is visible to students
+  creation_timestamp: string;    // Possibly same as createdAt
+}
+```
+
+#### 10. Enrollment Table
+```typescript
+interface Enrollment {
+  documentId: string;
+  createdAt: string;
+  updatedAt: string;
+  enrollment_id: string;
+  student_id: string;
+  course_id: string;
+  enrollment_status: string;
+  enrollment_timestamp: string;
+  completed_test_ids: string[]; // Assuming it's stored as an array in ClickHouse
+}
+```
+
+#### 11. TestQuestion Table (Junction)
+```typescript
+interface TestQuestion {
+  documentId: string;           // Unique document ID
+  createdAt: string;            // ISO date string (e.g. "2025-07-17T12:30:00Z")
+  updatedAt: string;            // ISO date string
+  test_question_id: string;     // Unique identifier for this test-question link
+  test_id: string;              // Reference to the test
+  question_id: string;          // Reference to the question
+  is_valid: boolean;            // Whether this link is valid (soft delete or active flag)
+}
+```
+
+#### 12. TestStatus Table
+```typescript
+interface TestStatus {
+  documentId: string;               // Unique document identifier
+  createdAt: string;                // ISO timestamp
+  updatedAt: string;                // ISO timestamp
+  test_status_id: string;          // Unique status ID
+  student_id: string;              // Student identifier
+  test_status: 'not_started' | 'started' | 'in_progress' | 'completed'; // or string
+  cheating_reason?: string | null; // Reason for marking as cheating (optional)
+  last_updated_timestamp: string;  // ISO timestamp when status was last changed
+}
+
+```
+
+#### 13. TestSubmission Table
+```typescript
+interface TestSubmission{
+  documentId: string;           // Unique document ID (likely MongoDB's ObjectId or UUID)
+  createdAt: string;            // ISO date string or Date object
+  updatedAt: string;            // ISO date string or Date object
+  test_submission_id: string;   // Foreign key to submission
+  student_id: string;           // ID of the student
+  test_id: string;              // ID of the test
+  question_id: string;          // ID of the question
+  student_answer: string;       // Student's answer text/value
+  marks_obtained: number;        // Marks awarded
+  hints_used_count: number;      // Number of hints taken
+  submission_timestamp: string; 
+}
+```
+
+#### 14. Notification Table
+```typescript
+interface Notification {
+  documentId: string;               // Unique document ID (UUID or MongoDB ObjectId)
+  createdAt: string;                // ISO timestamp (e.g. "2025-07-17T12:00:00Z")
+  updatedAt: string;                // ISO timestamp
+  notification_id: string;         // Unique notification ID
+  user_id: string;                 // ID of the recipient user
+  message_content: string;         // Notification text
+  notification_type: 'info' | 'warning' | 'alert' | string; // Can extend as enum or keep generic
+  creation_timestamp: string;      // Original creation time (may be same as createdAt)
+  seen_status: boolean;            // True if user has seen the notification
+}
+```
+
 ### Enums
 
 ```typescript
