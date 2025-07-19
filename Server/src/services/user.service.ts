@@ -1,7 +1,6 @@
 import { dbService } from '../config/database';
 import { logger } from '../utils/logger';
 import { AppError } from '../errors/ApiError';
-import { User } from '../types/auth';
 
 export class UserService {
   async getUserProfile(userId: string, email: string) {

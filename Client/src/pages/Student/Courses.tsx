@@ -5,6 +5,7 @@ import { LoadingSpinnerWithoutHight } from "@/components/layout/LoadingSpinner";
 import { useState } from "react";
 import { Separator } from "@/components/ui/separator";
 import type { Course, Enrollment, Chapter as ChapterType, Topic, Test } from "@/types/database";
+// import type { CourseCard } from "@/types/studentCourse";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, BookOpen, Search, ChevronRight, Clock4, TvMinimal, FileX2, } from "lucide-react";
 import DashboardLayout from "@/components/layout/DashboardLayout";

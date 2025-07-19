@@ -12,8 +12,8 @@ router.get(
   asyncHandler(studentCoursesController.getCourseDetailsForEnrollement)
 );
 
-router.get(
-  '/enroll-me/:courseId',
+router.post(
+  '/enroll-me/',
   asyncHandler(studentCoursesController.EnrollMeInTheCourse)
 );
 

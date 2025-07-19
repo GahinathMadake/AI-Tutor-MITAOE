@@ -1,33 +1,44 @@
 import { Response } from 'express';
 import { userService } from '../services/user.service';
 import { ApiResponse, AuthenticatedRequest } from '../types/auth';
+import { semesterService } from '../services/semester.services';
+import { Semester } from '../types/semester';
 
 class StudentSemesterController {
 
     async getSemesterDetails(req: AuthenticatedRequest, res: Response) {
         const user = req.user!;
 
+        const {
+            semesterData,
+            courseData
+        } = await semesterService.getSemesterDetails(user.id);
 
-        const semesters = [
-            {
-                id: "1f4c5b4a-d23b-4b8e-930e-1c2e384fab90",
-                name: "Fall 2024",
-                createdAt: new Date("2024-06-01T10:00:00Z"),
-                courses: [], // You can populate with mock Course[] later
-            },
-            {
-                id: "9a01f3c3-e4af-4d1e-917d-7a2ff9e13f21",
-                name: "Spring 2025",
-                createdAt: new Date("2025-01-10T09:30:00Z"),
-                courses: [],
-            },
-            {
-                id: "b75c1246-a66b-4ad6-86b3-0c2b3fc44dc4",
-                name: "Summer 2025",
-                createdAt: new Date("2025-05-15T14:00:00Z"),
-                courses: [],
+        const semestersMap = new Map<string, Semester>();
+
+        for (const sem of semesterData.data) {
+            semestersMap.set(sem.semester_id, {
+                id: sem.semester_id,
+                name: sem.semester_name,
+                courses: []
+            });
+        }
+
+        for (const course of courseData.data) {
+            const semester = semestersMap.get(course.semester_id);
+            if (semester) {
+                semester.courses.push({
+                    id: course.id,
+                    name: course.name,
+                    description: course.description,
+                    school: { name: course.school_name },
+                    numberOfEnrollments: course.number_of_enrollments,
+                    teacher: { name: course.teacher_name }
+                });
             }
-        ];
+        }
+
+        const semesters = Array.from(semestersMap.values());
 
         const response: ApiResponse = {
             success: true,

@@ -3,10 +3,10 @@ import IconAndLabel from './IconAndLabel';
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import courseImage from '../assets/Teaching-Data-Structures-and-Algorithms.jpg';
 import { LayoutGrid, User} from 'lucide-react';
-import type { Course } from "@/types/database";
+import type { CourseCard as CourseCardType } from "@/types/studentCourse";
 
 interface CourseCardProps {
-  course: Course,
+  course: CourseCardType,
 }
 
 const CourseCard: React.FC<CourseCardProps> = ({ course }) => {
@@ -19,7 +19,7 @@ const CourseCard: React.FC<CourseCardProps> = ({ course }) => {
 
       <div className="py-3 flex justify-between">
         <IconAndLabel item={{label:String(course.school.name), icon:LayoutGrid}} />
-        <IconAndLabel item={{ label: String(course.enrollments?.length || 0), icon: User }} />
+        <IconAndLabel item={{ label: String(course.numberOfEnrollments || 0), icon: User }} />
       </div>
       
       <h1 className="opacity-90 py-2 text-xl font-semibold">

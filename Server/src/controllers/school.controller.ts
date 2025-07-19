@@ -1,6 +1,6 @@
 import { Response } from 'express';
-import { userService } from '../services/user.service';
 import { ApiResponse, AuthenticatedRequest } from '../types/auth';
+import { schoolService } from '../services/school.services';
 
 class StudentSchoolController {
 
@@ -8,75 +8,23 @@ class StudentSchoolController {
         const user = req.user!;
         const { schoolId } = req.params;
 
-        console.log("Fetching school details for user:", user.id, "School ID:", schoolId);
-
+        const {
+            schoolData,
+            schoolUsers,
+            SchoolCourses
+        } = await schoolService.getSchoolDetails(user.id, schoolId);
 
         const school = {
-            id: "sch-1234",
-            name: "Greenfield International School",
-            createdAt: new Date("2023-01-01"),
-            users: [
-                {
-                    id: "usr-1",
-                    name: "Alice Johnson",
-                    username: "alicejohn",
-                    prn: 1000001,
-                    email: "alice@greenfield.edu",
-                    password: "hashed-password-alice",
-                    role: "TEACHER",
-                    schoolId: "sch-1234",
-                    createdAt: new Date("2023-01-10"),
-                    teachingCourses: [], // will be filled later
-                    enrollments: [],
-                    createdTests: [],
-                    createdQuestions: [],
-                    testStatuses: [],
-                    testSubmissions: [],
-                    notifications: [],
-                },
-                {
-                    id: "usr-2",
-                    name: "Bob Smith",
-                    username: "bobsmith",
-                    prn: 1000002,
-                    email: "bob@greenfield.edu",
-                    password: "hashed-password-bob",
-                    role: "STUDENT",
-                    schoolId: "sch-1234",
-                    createdAt: new Date("2023-01-12"),
-                    teachingCourses: [],
-                    enrollments: [],
-                    createdTests: [],
-                    createdQuestions: [],
-                    testStatuses: [],
-                    testSubmissions: [],
-                    notifications: [],
-                },
-            ],
-            courses: [
-                {
-                    id: "crs-101",
-                    name: "Introduction to AI",
-                    description: "A beginner-friendly course on Artificial Intelligence.",
-                    enrollmentKey: "AI2024",
-                    teacherId: "usr-1",
-                    schoolId: "sch-1234",
-                    semesterId: "sem-2024-fall",
-                    createdAt: new Date("2024-06-10"),
-                    teacher: [],
-                    school: [],
-                    semester: [],
-                    chapters: [],
-                    enrollments: [],
-                    tests: [],
-                    questions: [],
-                },
-            ],
+            id: schoolData.data[0]?.id,
+            name: schoolData.data[0]?.name,
+            createdAt: schoolData.data[0]?.createdAt,
+            users: schoolUsers.data,
+            numberOfCourses: SchoolCourses.data[0]?.numberOfCourses || 0,
         };
-
+        
         const response: ApiResponse = {
             success: true,
-            data: { school }
+            data: { school:school }
         };
 
         res.status(200).json(response);

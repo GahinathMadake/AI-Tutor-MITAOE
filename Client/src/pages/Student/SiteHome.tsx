@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
-import { Users, BookOpen, Search, ChevronRight, MoreVertical, Play, CalendarDays, User as UserIcon, School as SchoolIcon } from "lucide-react";
+import { Users, BookOpen, Search, ChevronRight, MoreVertical, Play, CalendarDays, User as UserIcon, School as SchoolIcon, ArrowLeft, Clock, FileText, HelpCircle, Home, Loader, UserPlus } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Accordion } from "@/components/ui/accordion";
 import {
@@ -10,66 +10,46 @@ import {
     DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
 import { Input } from '@/components/ui/input';
-import { Link, useNavigate, useParams } from 'react-router-dom';
-import type { Course, School, Semester } from '@/types/database';
+import { Link, useParams } from 'react-router-dom';
+import type { CourseEnrollmentType, School, Semester } from '@/types/StudentSiteHome';
 import { SemesterTabs, type SemesterTab } from '@/types/StudentSiteHome';
-import { API_BASE } from '@/utils/api';
 import { LoadingSpinnerWithoutHight } from '@/components/layout/LoadingSpinner';
 import { useAuth } from '@/hooks/useAuth';
-
-
-
-
-
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Clock, FileText, HelpCircle, Home, Loader, UserPlus } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import CourseCard from './common/CourseCard';
+import { useStudentSiteHome } from '@/hooks/useStudentSiteHome';
+import { useCourseEnrollContext } from '@/hooks/useStudentCourseEnroll';
 
 export const CourseEnroll = () => {
-    const navigate = useNavigate();
     const { courseId = '', schoolId = '' } = useParams();
-    const { user, token } = useAuth();
-    const [course, setCourse] = useState<Course>();
+    const { user } = useAuth();
+    const [course, setCourse] = useState<CourseEnrollmentType>();
     const [loading, setLoading] = useState<boolean>(true);
 
-    const fetchCourseDetails = async (courseId: string, token: string) => {
+    const { fetchCourseById, enrollInCourse } = useCourseEnrollContext();
+
+
+    const loadCourse = async () => {
         setLoading(true);
-
-        try {
-            const response = await fetch(`${API_BASE}/student/course/get-course-details/${courseId}`, {
-                method: 'GET',
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-
-            const data = await response.json();
-
-            console.log('Fetched course:', data);
-
-            if (data.success) {
-                setCourse(data.data.course);
-            } else {
-                console.error('API error (fetch course):', data);
-            }
-        } catch (error) {
-            console.error('Error fetching course:', error);
-        } finally {
-            setTimeout(() => setLoading(false), 500);
-        }
+        const fetchedCourse = await fetchCourseById(courseId);
+        setCourse(fetchedCourse);
+        setTimeout(() => setLoading(false), 500);
     };
 
     useEffect(() => {
-        if (!courseId || !token) return;
-        fetchCourseDetails(courseId, token);
-    }, [token, courseId]);
+        if (!courseId) return;
+        loadCourse();
+    }, [courseId]);
+
 
     // Enrolling Details
     const [enrollmentKey, setEnrollmentKey] = useState<string>('');
     const [enrolling, setEnrolling] = useState(false);
     const [enrollmentError, setEnrollmentError] = useState('');
+
 
     const EnrollMeInCourse = async (courseId: string, enrollmentKey: string) => {
         setEnrolling(true);
@@ -81,46 +61,24 @@ export const CourseEnroll = () => {
             return;
         }
 
-        try {
-            const response = await fetch(`${API_BASE}/student/course/enroll-me`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify({
-                    courseId,
-                    enrollmentKey: enrollmentKey.trim(),
-                }),
-            });
-
-            const data = await response.json();
-            console.log('Enrollment response:', data);
-
-            if (data.success) {
-                alert('You are successfully enrolled in the course');
-                navigate(`/student/course/${courseId}`);
-            } else {
-                setEnrollmentError(data.message || 'Enrollment failed');
-            }
-        } catch (error: any) {
-            console.error('Enrollment error:', error);
-            setEnrollmentError(
-                error?.message || 'Failed to enroll. Please try again.'
-            );
-        } finally {
-            setEnrolling(false);
+        const result = await enrollInCourse(courseId, enrollmentKey);
+        if (!result.success) {
+            setEnrollmentError(result.message || 'Failed to enroll');
         }
+        else{
+            setEnrollmentError(result.message || "Successfully Enrolled");
+            loadCourse();
+        }
+
+        setEnrolling(false);
     };
 
     return (
         <DashboardLayout
             breadcrumbItems={[
                 { label: "Dashboard", isCurrentPage: false, href: "/dashboard" },
-                { label: "Site-Home", isCurrentPage: false, href: `/Site-Home/${schoolId}` },
-                { label: `${schoolId}`, isCurrentPage: false, href: `/Site-Home/${schoolId}` },
-                { label: `Enroll`, isCurrentPage: true },
-                { label: `${courseId}`, isCurrentPage: true, },
+                { label: `Site-Home - ${schoolId}`, isCurrentPage: false, href: `/Site-Home/${schoolId}` },
+                { label: `Enroll - ${courseId}`, isCurrentPage: true },
             ]}
         >
             {
@@ -183,7 +141,7 @@ export const CourseEnroll = () => {
                                                 <UserIcon className="h-5 w-5 text-muted-foreground" />
                                                 <div>
                                                     <p className="text-sm text-muted-foreground">Instructor</p>
-                                                    <p className="font-medium">{course.teacher.name}</p>
+                                                    <p className="font-medium">{course.instructorName}</p>
                                                 </div>
                                             </div>
 
@@ -191,7 +149,7 @@ export const CourseEnroll = () => {
                                                 <SchoolIcon className="h-5 w-5 text-muted-foreground" />
                                                 <div>
                                                     <p className="text-sm text-muted-foreground">School</p>
-                                                    <p className="font-medium">{course.school.name}</p>
+                                                    <p className="font-medium">{course.schoolName}</p>
                                                 </div>
                                             </div>
 
@@ -199,7 +157,7 @@ export const CourseEnroll = () => {
                                                 <CalendarDays className="h-5 w-5 text-muted-foreground" />
                                                 <div>
                                                     <p className="text-sm text-muted-foreground">Semester</p>
-                                                    <p className="font-medium">{course.semester.name}</p>
+                                                    <p className="font-medium">{course.semesterName}</p>
                                                 </div>
                                             </div>
                                         </div>
@@ -210,19 +168,19 @@ export const CourseEnroll = () => {
 
                                             <div className="flex flex-col items-center p-4 border rounded-lg shadow-sm">
                                                 <BookOpen className="text-red-500 w-8 h-8" />
-                                                <p className="text-xl mt-2">{course.chapters?.length || 0}</p>
+                                                <p className="text-xl mt-2">{course.totalChapters || 0}</p>
                                                 <p className="text-sm">Total Chapters</p>
                                             </div>
 
                                             <div className="flex flex-col items-center p-4 border rounded-lg shadow-sm">
                                                 <FileText className="text-blue-500 w-8 h-8" />
-                                                <p className="text-xl mt-2">{course.tests?.length || 0}</p>
+                                                <p className="text-xl mt-2">{course.totalChapters || 0}</p>
                                                 <p className="text-sm">Tests</p>
                                             </div>
 
                                             <div className="flex flex-col items-center p-4 border rounded-lg shadow-sm">
                                                 <HelpCircle className="text-green-500 w-8 h-8" />
-                                                <p className="text-xl mt-2">{course.questions?.length || 0}</p>
+                                                <p className="text-xl mt-2">{course.totalQuestions || 0}</p>
                                                 <p className="text-sm">Questions</p>
                                             </div>
 
@@ -312,13 +270,7 @@ export const CourseEnroll = () => {
 }
 
 
-
-
-interface SemesterCardProps {
-    semester: Semester;
-}
-
-export const SemesterCard: React.FC<SemesterCardProps> = ({ semester }) => {
+export const SemesterCard: React.FC<{ semester: Semester, schoolId: string }> = ({ semester, schoolId }) => {
     return (
         <div className="my-2">
             <Collapsible>
@@ -336,17 +288,13 @@ export const SemesterCard: React.FC<SemesterCardProps> = ({ semester }) => {
                     <div className="px-4">
                         {semester.courses.length > 0 ? (
                             <Accordion type="single" collapsible>
-                                {semester.courses.map((course) => (
-                                    <div
-                                        key={course.id}
-                                        className="border-b border-gray-200 dark:border-gray-700 py-2 text-sm text-gray-800 dark:text-gray-200"
-                                    >
-                                        <div className="flex items-center gap-2">
-                                            <BookOpen className="w-4 h-4 text-indigo-500" />
-                                            <span>{course.name}</span>
-                                        </div>
-                                    </div>
-                                ))}
+                                <div className='my-6 flex flex-wrap gap-6'>
+                                    {semester.courses.map((course) => (
+                                        <Link to={`/Site-Home/${schoolId}/enroll/${course.id}`}>
+                                            <CourseCard course={course} />
+                                        </Link>
+                                    ))}
+                                </div>
                             </Accordion>
                         ) : (
                             <p className="text-sm text-gray-400 italic py-2">No courses available.</p>
@@ -361,80 +309,28 @@ export const SemesterCard: React.FC<SemesterCardProps> = ({ semester }) => {
 
 const SiteHome: React.FC = () => {
     const { schoolId } = useParams<{ schoolId: string }>();
-    const { token } = useAuth();
-
-    const [initialTab, setInitialTab] = useState<SemesterTab>('all-semesters');
+    const { semesters, isSemesterLoading, fetchSchoolById } = useStudentSiteHome();
 
     const [school, setSchool] = useState<School>();
-    const [loading, setLoading] = useState<boolean>(true);
-    const [semesters, setSemesters] = useState<Semester[]>([]);
-    const [semesterLoading, setSemesterLoading] = useState<boolean>(false);
+    const [isLoading, setIsLoading] = useState<boolean>(true);
 
-    const fetchSemestersData = async (token: string) => {
-        setSemesterLoading(true);
-
-        try {
-            const response = await fetch(`${API_BASE}/student/semester/get-all-semester`, {
-                method: 'GET',
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-
-            const data = await response.json();
-
-            console.log('Fetched semesters:', data);
-
-            if (data.success) {
-                setSemesters(data.data.semesters);
-            } else {
-                console.error('API error (fetch semesters):', data);
-            }
-        } catch (error) {
-            console.error('Error fetching semesters:', error);
-        } finally {
-            setTimeout(() => setSemesterLoading(false), 500);
-        }
-    };
-
-    const fetchSchoolDetails = async (schoolId: string, token: string) => {
+    const fetchSchoolDetails = async (schoolId: string) => {
         if (!schoolId) return;
-
-        setLoading(true);
-
-        try {
-            const response = await fetch(`${API_BASE}/student/school/get-school-by-id/${schoolId}`, {
-                method: 'GET',
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-
-            const data = await response.json();
-            console.log('Fetched school details:', data);
-
-            if (data.success) {
-                setSchool(data.data.school);
-            } else {
-                console.error('API error (fetch school):', data);
-            }
-        } catch (error) {
-            console.error('Error fetching school details:', error);
-        } finally {
-            setTimeout(() => setLoading(false), 500);
-        }
+        setIsLoading(true);
+        const data = await fetchSchoolById(schoolId);
+        setSchool(data);
+        setTimeout(() => setIsLoading(false), 500);
     };
 
     useEffect(() => {
         if (!schoolId) return;
-        if (!token) return;
-
-        fetchSemestersData(token);
-        fetchSchoolDetails(schoolId, token);
+        fetchSchoolDetails(schoolId);
     }, [schoolId]);
 
 
+
     /*------------------------- Search Query Optimisation -------------------------*/
+    const [initialTab, setInitialTab] = useState<SemesterTab>('all-semesters');
     const [searchQuery, setSearchQuery] = useState<string>("");
 
     const getFilteredUsers = () => {
@@ -457,12 +353,11 @@ const SiteHome: React.FC = () => {
         <DashboardLayout
             breadcrumbItems={[
                 { label: "Dashboard", isCurrentPage: false, href: "/dashboard" },
-                { label: "Site-Home", isCurrentPage: false },
-                { label: `${schoolId}`, isCurrentPage: true },
+                { label: `Site-Home - ${schoolId}`, isCurrentPage: true },
             ]}
         >
             {
-                loading ?
+                isLoading ?
                     <div className='w-full h-40 flex items-center justify-center'>
                         <LoadingSpinnerWithoutHight />
                     </div>
@@ -513,7 +408,7 @@ const SiteHome: React.FC = () => {
                                                 </div>
                                                 <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
                                                     <BookOpen className="w-4 h-4" />
-                                                    <span>{school.courses.length} Courses</span>
+                                                    <span>{school.numberOfCourses || 0} Courses</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -559,7 +454,7 @@ const SiteHome: React.FC = () => {
 
                                             {
                                                 initialTab === SemesterTabs.AllSemesters &&
-                                                (semesterLoading ?
+                                                (isSemesterLoading ?
                                                     <div className="flex items-center justify-center h-32">
                                                         <LoadingSpinnerWithoutHight />
                                                     </div>
@@ -573,7 +468,7 @@ const SiteHome: React.FC = () => {
                                                         ) : (
                                                             <div>
                                                                 {semesters.map((semester) => (
-                                                                    <SemesterCard key={semester.id} semester={semester} />
+                                                                    <SemesterCard key={semester.id} semester={semester} schoolId={school.id} />
                                                                 ))}
                                                             </div>
                                                         )}
@@ -655,3 +550,4 @@ const SiteHome: React.FC = () => {
 }
 
 export default SiteHome;
+
