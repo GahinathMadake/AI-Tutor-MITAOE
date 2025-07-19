@@ -5,7 +5,7 @@ import { LoadingSpinnerWithoutHight } from "@/components/layout/LoadingSpinner";
 import { useState } from "react";
 import { Separator } from "@/components/ui/separator";
 import type { Course, Enrollment, Chapter as ChapterType, Topic, Test } from "@/types/database";
-// import type { CourseCard } from "@/types/studentCourse";
+import type { CourseCard as CourseCardType } from "@/types/studentCourse";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, BookOpen, Search, ChevronRight, Clock4, TvMinimal, FileX2, } from "lucide-react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
@@ -30,6 +30,7 @@ import {
 } from "@/components/ui/accordion";
 import ProgressCircular from "./common/ProgressCircular";
 import { Input } from "@/components/ui/input";
+import { useCourseContext } from "@/hooks/useStudentCourses";
 
 
 
@@ -354,50 +355,24 @@ export const SingleCourse = () => {
 
 
 const Courses = () => {
-  const { token } = useAuth();
-  const { progress } = useParams();
   const navigate = useNavigate();
 
-  const [loading, setLoading] = useState<boolean>(true);
-  const [courses, setCourses] = useState<Course[]>([]);
+  const { progress } = useParams();
+  const { fetchCoursesByProgress } = useCourseContext();
+
+  const [loading, setLoading] = useState(true);
+  const [courses, setCourses] = useState<CourseCardType[]>([]);
 
   useEffect(() => {
-    if (token === null || token === undefined) {
-      return;
-    }
-
-    const fetchCourses = async (rawProgress: string, token: string) => {
+    const getCourses = async () => {
       setLoading(true);
-
-      try {
-        const url = new URL(`${API_BASE}/student/course/get-user-course-by-progress/${rawProgress}`);
-
-        const response = await fetch(url.toString(), {
-          method: 'GET',
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        const data = await response.json();
-
-        console.log(data);
-
-        if (data.success) {
-          setCourses(data.data.courses);
-        } else {
-          console.error('API error (fetch courses):', data);
-        }
-      } catch (error) {
-        console.error('Error fetching courses:', error);
-      } finally {
-        setTimeout(() => setLoading(false), 500);
-      }
+      const result = await fetchCoursesByProgress(progress || "All");
+      setCourses(result);
+      setTimeout(() => setLoading(false), 300);
     };
 
-    const rawProgress = progress || "All";
-    fetchCourses(rawProgress, token);
-  }, [progress]);
+    getCourses();
+  }, [progress, fetchCoursesByProgress]);
 
 
   /*------------------------- Search Query Optimisation -------------------------*/
