@@ -8,6 +8,7 @@ import {
   Home,
   Layout,
   type LucideIcon,
+  FileClock,
 } from "lucide-react"
 
 import { NavMain } from "@/components/nav-main"
@@ -122,6 +123,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               url: "/courses/all",
             },
           ],
+        },
+        {
+          title: "Test History",
+          url: "/student/test-history",
+          icon: FileClock,
         },
         {
           title: "Notifications",

@@ -16,6 +16,7 @@ import TestPage, { TestPageHelper } from './pages/Student/TestPage';
 import { StudentSiteHomeProvider } from './context/SiteHomeContext';
 import { CourseEnrollProvider } from './context/StudentCourseEnrollContext';
 import { StudentCoursesProvider } from './context/StudentCoursesContext';
+import TestHistory from './pages/Student/TestHistory';
 
 const App: React.FC = () => {
   return (
@@ -109,6 +110,15 @@ const App: React.FC = () => {
                           <TestPage />
                         </ProtectedRoute>
                       }
+                    />
+
+                    <Route 
+                      path="/student/test-history" 
+                      element={
+                        <ProtectedRoute>
+                          <TestHistory />
+                        </ProtectedRoute>
+                      } 
                     />
 
 
