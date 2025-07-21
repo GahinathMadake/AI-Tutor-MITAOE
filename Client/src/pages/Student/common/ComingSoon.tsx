@@ -3,15 +3,15 @@ import { Link } from "react-router-dom";
 import CountdownTimer from "./CountDownTimer";
 import { Button } from "@/components/ui/button";
 import { Clock4, CalendarDays, CalendarCheck } from "lucide-react";
-import type { TestStatus } from "@/types/database"; 
+import type { TestStatus } from "@/types/studentTakeTest"; 
 import { useAuth } from "@/hooks/useAuth";
 
 interface TestData {
   testId?:string;
   heading: string;
   duration: number;
-  startTime: Date;
-  endTime: Date;
+  startTime: string;
+  endTime: string;
   testStatuses?:TestStatus[];
 }
 

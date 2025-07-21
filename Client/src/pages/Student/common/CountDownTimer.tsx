@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 
 interface CountdownTimerProps {
-  time: Date; 
+  time: string; 
   timer: { heading: string; subHeading: string };
   className?:string;
 }

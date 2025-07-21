@@ -10,8 +10,9 @@ export interface TestHistoryDashboardData{
 
 export interface MonthWiseTests{
     month:string;
-    tests:number
+    tests:number;
 }
+
 
 export interface TestHistory{
     id: string;

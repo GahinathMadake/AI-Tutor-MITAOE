@@ -18,7 +18,6 @@ import Webcam from "react-webcam";
 import { AlertTriangle, Ban, Loader2, Monitor, RotateCcwIcon, ScanEye, Lightbulb, GalleryVerticalEnd } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
-import type { Test, Question } from "@/types/database";
 import { API_BASE } from "@/utils/api";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
@@ -36,6 +35,7 @@ import { Input } from '@/components/ui/input';
 import { AlertDialogCancel } from "@radix-ui/react-alert-dialog";
 import WorqHat from "./assets/WorqHat.png";
 import College_logo from "@/assets/logo_MITAOE.jpg";
+import type { Question, TestType } from "@/types/studentTakeTest";
 
 
 
@@ -422,7 +422,7 @@ const TestPage: React.FC = () => {
   const { user, token } = useAuth();
   const navigate = useNavigate();
 
-  const [Test, setTest] = useState<Test>();
+  const [Test, setTest] = useState<TestType>();
   const [Loading, setIsLoading] = useState<boolean>(true);
   const [message, setMessage] = useState<string>("");
   const [startingTest, setStartingTest] = useState<boolean>(false);

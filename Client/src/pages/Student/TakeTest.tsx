@@ -17,19 +17,18 @@ import {
   RefreshCw,
   Ban
 } from 'lucide-react';
-import { useAuth } from "@/hooks/useAuth";
-import type { Test, TestSubmission } from "@/types/database";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { LoadingSpinnerWithoutHight } from "@/components/layout/LoadingSpinner";
 import { useParams } from 'react-router-dom';
 import { CorrectAnswers, BeatsStudents, MarksBarChart } from './common/PieChart';
 import CommingSoon from "./common/ComingSoon";
-import { API_BASE } from "@/utils/api";
+import type { TestType, TestSubmissionType, TestAnalyticsData } from "@/types/studentTakeTest";
+import { useStudentTestContext } from "@/hooks/useStudentTakeTest";
 
 
 
 interface QuestionAnalysisProps {
-  question: TestSubmission,
+  question: TestSubmissionType,
   index: number,
 }
 
@@ -176,84 +175,25 @@ export const QuestionAnalysis: React.FC<QuestionAnalysisProps> = ({ question, in
 
 export const TestAnalytics = () => {
   const { testId } = useParams();
-  const { token } = useAuth();
 
-  const [testAnswers, setTestAnswers] = useState<TestSubmission[]>([]);
+  const { getTestAnalytics } = useStudentTestContext();
 
-  const [correctQuestions, setCorrectQuestions] = useState<number>(0);
-  const [wrongQuestions, setWrongQuestions] = useState<number>(0);
-  const [skippedQuestions, setSkippedQuestions] = useState<number>(0);
-  const [totalMarks, setTotalMarks] = useState<number>(5);
-  const [correctMarksScored, setCorrectMarksScored] = useState<number>(0);
-  const [hintsMarks, setHintsMarks] = useState<number>(0);
-
+  const [analytics, setAnalytics] = useState<TestAnalyticsData>();
   const [loading, setLoading] = useState<boolean>(true);
 
-  const fetchTestBasicDetails = async (testId: string, token: string) => {
-    setLoading(true);
-
-    try {
-      const response = await fetch(
-        `${API_BASE}/student/test/get-test-analysis?testId=${testId}`,
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      const result = await response.json();
-      
-
-      if (result.success) {
-        let correctQue = 0;
-        let wrongQue = 0;
-        let skippedQue = 0;
-        let correctMarks = 0;
-        let hintsUsed = 0;
-
-        result.data.submissions.forEach((submission: TestSubmission) => {
-          const submitted = submission.answer?.trim();
-
-          hintsUsed += submission.hintsUsed;
-
-          if (!submitted) {
-            skippedQue += 1;
-          } else if (submission.marksObtained !== 0) {
-            correctQue += 1;
-            correctMarks += submission.marksObtained;
-          } else {
-            wrongQue += 1;
-          }
-        });
-
-        setCorrectQuestions(correctQue);
-        setWrongQuestions(wrongQue);
-        setSkippedQuestions(skippedQue);
-
-        setTotalMarks(5 * (correctQue + wrongQue + skippedQue));
-        setCorrectMarksScored(correctMarks);
-        setHintsMarks(hintsUsed);
-
-        setTestAnswers(result.data.submissions);
-      } else {
-        console.error("API error (test-analysis):", result.message || result.error || result);
-      }
-    } catch (error) {
-      console.error("Error fetching test analysis:", error);
-    } finally {
-      setTimeout(() => setLoading(false), 500);
-    }
-  };
-
   useEffect(() => {
-    if (!testId || !token) {
-      return;
-    }
+    const fetchAnalytics = async () => {
+      if (!testId) return;
 
-    fetchTestBasicDetails(testId, token);
-  }, [testId, token]);
+      setLoading(true);
+      const data = await getTestAnalytics(testId);
+      setAnalytics(data ?? undefined);
+      setTimeout(() => setLoading(false), 300);
+    };
+
+    fetchAnalytics();
+  }, [testId]);
+
 
 
   if (loading) {
@@ -262,7 +202,7 @@ export const TestAnalytics = () => {
     </div>
   }
 
-  if (!testAnswers || testAnswers.length === 0) {
+  if (!analytics) {
     return <div className="w-full max-w-xl mx-auto mt-10 px-4 sm:px-6 lg:px-8">
       <div className="border border-red-200 bg-red-50 p-6 rounded-2xl shadow-sm text-center animate-fade-in">
         <div className="flex justify-center mb-4">
@@ -281,20 +221,20 @@ export const TestAnalytics = () => {
       <h1 className='text-xl font-semibold my-2'>Test Analysis</h1>
       <div className='flex flex-wrap gap-5'>
         <div className='w-[300px] max-w-sm'>
-          <CorrectAnswers correctQuestions={correctQuestions} wrongQuestions={wrongQuestions} skippedQuestions={skippedQuestions} />
+          <CorrectAnswers correctQuestions={analytics.correctQuestions} wrongQuestions={analytics.wrongQuestions} skippedQuestions={analytics.skippedQuestions} />
         </div>
         <div className='w-[300px] max-w-sm'>
-          <BeatsStudents totalMarks={totalMarks} marksScored={correctMarksScored} />
+          <BeatsStudents totalMarks={analytics.totalMarks} marksScored={analytics.correctMarksScored} />
         </div>
         <div className='w-[300px] max-w-sm'>
-          <MarksBarChart correctMarks={correctMarksScored} wrongMarks={wrongQuestions * 5} skippedMarks={skippedQuestions * 5} hintsMarks={hintsMarks} />
+          <MarksBarChart correctMarks={analytics.correctMarksScored} wrongMarks={analytics.wrongQuestions * 5} skippedMarks={analytics.skippedQuestions * 5} hintsMarks={analytics.hintsMarks} />
         </div>
       </div>
 
       <h1 className='mt-10 mb-5 text-xl font-semibold my-2'>Questions Analysis</h1>
 
       <div className="space-y-4">
-        {testAnswers.map((question, index) => (
+        {analytics.testAnswers.map((question, index) => (
           <QuestionAnalysis key={index} question={question} index={index} />
         ))}
       </div>
@@ -308,51 +248,28 @@ export const TestAnalytics = () => {
 
 const TakeTest: React.FC = () => {
   const { testId } = useParams();
-  const { token } = useAuth();
+
+
+  const { getTest } = useStudentTestContext();
 
   const [loading, setLoading] = useState<boolean>(true);
-  const [testDetails, setTestDetails] = useState<Test>();
-
-  const fetchTestBasicDetails = async (testId: string, token: string) => {
-
-    setLoading(true);
-
-    try {
-      const response = await fetch(
-        `${API_BASE}/student/test/get-test-basic-details?testId=${testId}`,
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      const result = await response.json();
-
-      console.log("Test Fetch Result:", result);
-
-      if (result.success) {
-        setTestDetails(result.data.test);
-      } else {
-        console.error("API error (get-test):", result.message || result.error || result);
-      }
-    } catch (error) {
-      console.error("Error while fetching test details:", error);
-    } finally {
-      setTimeout(() => setLoading(false), 500);
-    }
-  };
-
+  const [testDetails, setTestDetails] = useState<TestType>();
 
   useEffect(() => {
-    if (!testId || !token) {
-      alert("Test ID and token are required");
-      return;
-    }
+    const loadTest = async () => {
+      if (!testId) {
+        alert('Test ID required');
+        return;
+      }
 
-    fetchTestBasicDetails(testId, token);
-  }, [testId, token]);
+      setLoading(true);
+      const test = await getTest(testId);
+      if (test) setTestDetails(test);
+      setTimeout(() => setLoading(false), 500);
+    };
+
+    loadTest();
+  }, [testId]);
 
 
 
@@ -389,8 +306,8 @@ const TakeTest: React.FC = () => {
             <button
               className="mt-3 px-3 py-1 text-sm border border-red-300 text-red-600 rounded hover:bg-red-100 transition"
               onClick={() =>
-                testId && token
-                  ? fetchTestBasicDetails(testId, token)
+                testId
+                  ? getTest(testId)
                   : alert("Test ID and token are required")
               }
             >
@@ -417,26 +334,26 @@ const TakeTest: React.FC = () => {
           <CardHeader className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left p-6 sm:p-8 bg-gradient-to-r from-gray-600 to-green-600">
             <Avatar className="w-24 h-24 border-4 border-white shadow-lg flex items-center justify-center">
               {
-                testDetails.testStatuses?.length
+                testDetails.testStatuses.length
                   ? <Check size={50} className="font-semibold" />
                   : <Play size={30} />
               }
             </Avatar>
 
             <div className="sm:ml-6 mt-4 sm:mt-0">
-              <h2 className="text-xl sm:text-2xl font-bold text-white">{testDetails.course.name || "unknown"}</h2>
+              <h2 className="text-xl sm:text-2xl font-bold text-white">{testDetails.courseName}</h2>
               <Badge variant="secondary" className="mt-2 bg-white text-blue-600 text-sm sm:text-base">
                 {testDetails.name}
               </Badge>
 
               <div className="pt-2 text-sm sm:text-base">
                 <strong>Topic: </strong>
-                <span>{testDetails.topic.name}</span>
+                <span>{testDetails.topicName}</span>
               </div>
 
               <div className="pt-2 text-sm sm:text-base">
                 <strong>Created by: </strong>
-                <span>{testDetails.teacher.name}</span>
+                <span>{testDetails.teacherName}</span>
               </div>
             </div>
           </CardHeader>
@@ -451,13 +368,13 @@ const TakeTest: React.FC = () => {
 
               <div className="flex flex-col items-center p-4 border rounded-lg shadow-sm">
                 <Users className="text-blue-500 w-8 h-8" />
-                <p className="text-lg sm:text-xl mt-2">{testDetails.testStatuses?.length}</p>
+                <p className="text-lg sm:text-xl mt-2">{testDetails.testStatuses.length || 0}</p>
                 <p className="text-xs sm:text-sm">Participants</p>
               </div>
 
               <div className="flex flex-col items-center p-4 border rounded-lg shadow-sm">
                 <CircleHelp className="text-green-500 w-8 h-8" />
-                <p className="text-lg sm:text-xl mt-2">{testDetails.testQuestions?.length || 0}</p>
+                <p className="text-lg sm:text-xl mt-2">{testDetails.testQuestions || 0}</p>
                 <p className="text-xs sm:text-sm">Questions</p>
               </div>
 
@@ -469,14 +386,14 @@ const TakeTest: React.FC = () => {
             </div>
 
             <div className="w-full">
-              {new Date() < new Date(testDetails?.startTime) ? (
+              {new Date() < new Date(testDetails.startTime) ? (
                 <CommingSoon
                   heading={"Upcoming: Your Next Challenge Awaits!"}
                   duration={testDetails.duration}
                   startTime={testDetails.startTime}
                   endTime={testDetails.endTime}
                 />
-              ) : new Date() < new Date(testDetails?.endTime) ? (
+              ) : new Date() < new Date(testDetails.endTime) ? (
                 <CommingSoon
                   testId={testDetails.id}
                   heading={"Ongoing: Go Ahead, Challenge Just Started!"}

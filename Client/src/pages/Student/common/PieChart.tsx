@@ -205,7 +205,7 @@ export const BeatsStudents: React.FC<BeatsStudentsProps> = ({ marksScored, total
 
 
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
-import type { MonthWiseTests } from "@/types/testHistory";
+import type { MonthWiseTests } from "@/types/studentTestHistory";
 
 interface MarksBarChartProps {
   correctMarks: number,

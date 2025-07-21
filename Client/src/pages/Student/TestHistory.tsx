@@ -4,7 +4,7 @@ import { BarChart2, BookOpen, CheckCircle, MoreVertical, Search } from "lucide-r
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Link, useNavigate } from 'react-router-dom';
-import type { TestHistoryDashboardData, TestHistory as TestHistoryType  } from '@/types/testHistory';
+import type { TestHistoryDashboardData, TestHistory as TestHistoryType  } from '@/types/studentTestHistory';
 import { Button } from '@/components/ui/button';
 import { CorrectAnswers, TestsAttempted } from './common/PieChart';
 import { useAuth } from '@/hooks/useAuth';
