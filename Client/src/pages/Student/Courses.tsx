@@ -4,13 +4,10 @@ import CourseCard from "./common/CourseCard";
 import { LoadingSpinnerWithoutHight } from "@/components/layout/LoadingSpinner";
 import { useState } from "react";
 import { Separator } from "@/components/ui/separator";
-import type { Course, Enrollment, Chapter as ChapterType, Topic, Test } from "@/types/database";
-import type { CourseCard as CourseCardType } from "@/types/studentCourse";
+import type { CourseCard as CourseCardType, TopicType, TestType, ChapterType, EnrollmentType, SingleCourseType } from "@/types/studentCourse";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, BookOpen, Search, ChevronRight, Clock4, TvMinimal, FileX2, } from "lucide-react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { useAuth } from "@/hooks/useAuth";
-import { API_BASE } from "@/utils/api";
 import {
   Card,
   CardContent,
@@ -21,7 +18,6 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-
 import {
   Accordion,
   AccordionContent,
@@ -31,13 +27,14 @@ import {
 import ProgressCircular from "./common/ProgressCircular";
 import { Input } from "@/components/ui/input";
 import { useCourseContext } from "@/hooks/useStudentCourses";
+import { useSingleCourseContext } from "@/hooks/useStudentSingleCourse";
 
 
 
 
 interface TestCardProps {
-  tests: Test[],
-  enrollment: Enrollment,
+  tests: TestType[],
+  enrollment: EnrollmentType,
 }
 
 export const TestCard: React.FC<TestCardProps> = ({ tests, enrollment }) => {
@@ -114,8 +111,8 @@ export const TestCard: React.FC<TestCardProps> = ({ tests, enrollment }) => {
 
 
 interface TopicProps {
-  topic: Topic;
-  enrollment: Enrollment,
+  topic: TopicType;
+  enrollment: EnrollmentType,
   topicKey: Number;
 }
 
@@ -151,7 +148,7 @@ export const TopicCompo: React.FC<TopicProps> = ({ topicKey, topic, enrollment }
 
 interface ChapterProps {
   chapter: ChapterType,
-  enrollment: Enrollment,
+  enrollment: EnrollmentType,
 }
 
 export const Chapter: React.FC<ChapterProps> = ({ chapter, enrollment }) => {
@@ -195,55 +192,28 @@ export const Chapter: React.FC<ChapterProps> = ({ chapter, enrollment }) => {
 
 export const SingleCourse = () => {
   const { courseId } = useParams();
-  const { token } = useAuth();
+  const { getSingleCourse } = useSingleCourseContext();
 
-  const [course, setCourse] = useState<Course>();
-  const [enrollment, setEnrollment] = useState<Enrollment>();
+  const [course, setCourse] = useState<SingleCourseType>();
+  const [enrollment, setEnrollment] = useState<EnrollmentType>();
   const [loading, setLoading] = useState<boolean>(true);
-
-  const fetchCourseHandler = async (courseId: string, token: string) => {
-    if (!courseId || !token) {
-      alert("Token is required");
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      const response = await fetch(`${API_BASE}/student/course/get-whole-course?courseId=${courseId}`, {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      const result = await response.json();
-
-      console.log("Course Fetch Result:", result);
-
-      if (result.success) {
-        const fetchedCourse = result.data.course;
-        const enrollmentData = result.data.enrollment;
-
-        setCourse(fetchedCourse);
-        setEnrollment(enrollmentData);
-      } else {
-        console.error("API error (getcourse):", result.message || result);
-      }
-    } catch (error) {
-      console.error("Error while fetching course:", error);
-    } finally {
-      setTimeout(() => setLoading(false), 500);
-    }
-  };
 
 
   useEffect(() => {
-    if (courseId === undefined || !courseId || token === null || token === undefined) {
-      return;
-    }
-    fetchCourseHandler(courseId, token);
-  }, [courseId, token])
+    const loadCourse = async () => {
+      if (!courseId) return;
+      setLoading(true);
+      const data = await getSingleCourse(courseId);
+      if (data) {
+        setCourse(data.course);
+        setEnrollment(data.enrollment);
+      }
+      setTimeout(() => setLoading(false), 500);
+    };
+
+    loadCourse();
+  }, [courseId]);
+
 
 
   if (loading) {
@@ -299,8 +269,8 @@ export const SingleCourse = () => {
             <CardHeader>
               <div className="flex flex-wrap gap-6">
                 <ProgressCircular progress={
-                  course.tests?.length
-                    ? Math.round((enrollment.completedTestIds.length / course.tests.length) * 100)
+                  course.TotalTests
+                    ? Math.round((enrollment.completedTestIds.length / course.TotalTests) * 100)
                     : 0
                 } size={60}
                 />
