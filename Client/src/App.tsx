@@ -18,6 +18,7 @@ import { CourseEnrollProvider } from './context/StudentCourseEnrollContext';
 import { StudentCoursesProvider } from './context/StudentCoursesContext';
 import TestHistory from './pages/Student/TestHistory';
 import { SingleCourseProvider } from './context/StudentSingleCourseContext';
+import { StudentTestHistoryProvider } from './context/studentTestHistory';
 
 const App: React.FC = () => {
   return (
@@ -29,117 +30,119 @@ const App: React.FC = () => {
               <CourseEnrollProvider>
                 <StudentCoursesProvider>
                   <SingleCourseProvider>
-                    <Routes>
-                      {/* Redirect root to auth */}
-                      <Route path="/" element={<Navigate to="/auth" replace />} />
+                    <StudentTestHistoryProvider>
+                      <Routes>
+                        {/* Redirect root to auth */}
+                        <Route path="/" element={<Navigate to="/auth" replace />} />
 
-                      {/* Public routes */}
-                      <Route path="/auth" element={<AuthPage />} />
-                      <Route path="/auth/authenticate" element={<AuthPage />} />
-                      <Route path="/complete-signup" element={<CompleteSignupPage />} />
+                        {/* Public routes */}
+                        <Route path="/auth" element={<AuthPage />} />
+                        <Route path="/auth/authenticate" element={<AuthPage />} />
+                        <Route path="/complete-signup" element={<CompleteSignupPage />} />
 
-                      {/* Protected routes */}
-                      <Route
-                        path="/dashboard"
-                        element={
-                          <ProtectedRoute>
-                            <Dashboard />
-                          </ProtectedRoute>
-                        }
-                      >
-                      </Route>
+                        {/* Protected routes */}
+                        <Route
+                          path="/dashboard"
+                          element={
+                            <ProtectedRoute>
+                              <Dashboard />
+                            </ProtectedRoute>
+                          }
+                        >
+                        </Route>
 
-                      {/* Student Side Routes */}
-                      <Route
-                        path="/Site-Home/:schoolId"
-                        element={
-                          <ProtectedRoute>
-                            <SiteHome />
-                          </ProtectedRoute>
-                        }
-                      />
+                        {/* Student Side Routes */}
+                        <Route
+                          path="/Site-Home/:schoolId"
+                          element={
+                            <ProtectedRoute>
+                              <SiteHome />
+                            </ProtectedRoute>
+                          }
+                        />
 
-                      <Route
-                        path="/Site-Home/:schoolId/enroll/:courseId"
-                        element={
-                          <ProtectedRoute>
-                            <CourseEnroll />
-                          </ProtectedRoute>
-                        }
-                      />
+                        <Route
+                          path="/Site-Home/:schoolId/enroll/:courseId"
+                          element={
+                            <ProtectedRoute>
+                              <CourseEnroll />
+                            </ProtectedRoute>
+                          }
+                        />
 
-                      <Route
-                        path="/courses/:progress"
-                        element={
-                          <ProtectedRoute>
-                            <Courses />
-                          </ProtectedRoute>
-                        }
-                      />
+                        <Route
+                          path="/courses/:progress"
+                          element={
+                            <ProtectedRoute>
+                              <Courses />
+                            </ProtectedRoute>
+                          }
+                        />
 
-                      <Route
-                        path="student/course/:courseId"
-                        element={
-                          <ProtectedRoute>
-                            <SingleCourse />
-                          </ProtectedRoute>
-                        }
-                      />
-
-
-                      <Route
-                        path="/student/user/course/test/:testId"
-                        element={
-                          <ProtectedRoute>
-                            <TakeTest />
-                          </ProtectedRoute>
-                        }
-                      />
-
-                      <Route
-                        path="/exam/test/:testId"
-                        element={
-                          <ProtectedRoute>
-                            <TestPageHelper />
-                          </ProtectedRoute>
-                        }
-                      />
-
-                      <Route
-                        path="/exam/test/:testId/attempt"
-                        element={
-                          <ProtectedRoute>
-                            <TestPage />
-                          </ProtectedRoute>
-                        }
-                      />
-
-                      <Route 
-                        path="/student/test-history" 
-                        element={
-                          <ProtectedRoute>
-                            <TestHistory />
-                          </ProtectedRoute>
-                        } 
-                      />
+                        <Route
+                          path="student/course/:courseId"
+                          element={
+                            <ProtectedRoute>
+                              <SingleCourse />
+                            </ProtectedRoute>
+                          }
+                        />
 
 
+                        <Route
+                          path="/student/user/course/test/:testId"
+                          element={
+                            <ProtectedRoute>
+                              <TakeTest />
+                            </ProtectedRoute>
+                          }
+                        />
+
+                        <Route
+                          path="/exam/test/:testId"
+                          element={
+                            <ProtectedRoute>
+                              <TestPageHelper />
+                            </ProtectedRoute>
+                          }
+                        />
+
+                        <Route
+                          path="/exam/test/:testId/attempt"
+                          element={
+                            <ProtectedRoute>
+                              <TestPage />
+                            </ProtectedRoute>
+                          }
+                        />
+
+                        <Route 
+                          path="/student/test-history" 
+                          element={
+                            <ProtectedRoute>
+                              <TestHistory />
+                            </ProtectedRoute>
+                          } 
+                        />
 
 
-                      {/* ------------------ Common Routes ------------------ */}
-                      <Route
-                        path="/dashboard/profile"
-                        element={
-                          <ProtectedRoute>
-                            <UserProfile />
-                          </ProtectedRoute>
-                        }
-                      />
 
 
-                      {/* 404 route */}
-                      <Route path="*" element={<NotFoundPage />} />
-                    </Routes>
+                        {/* ------------------ Common Routes ------------------ */}
+                        <Route
+                          path="/dashboard/profile"
+                          element={
+                            <ProtectedRoute>
+                              <UserProfile />
+                            </ProtectedRoute>
+                          }
+                        />
+
+
+                        {/* 404 route */}
+                        <Route path="*" element={<NotFoundPage />} />
+                      </Routes>
+                    </StudentTestHistoryProvider>
                   </SingleCourseProvider>
                 </StudentCoursesProvider>
               </CourseEnrollProvider>

@@ -35,7 +35,7 @@ import { Input } from '@/components/ui/input';
 import { AlertDialogCancel } from "@radix-ui/react-alert-dialog";
 import WorqHat from "./assets/WorqHat.png";
 import College_logo from "@/assets/logo_MITAOE.jpg";
-import type { Question, TestType } from "@/types/studentTakeTest";
+import type { Question, TestType } from "@/types/studentTestPage";
 
 
 
@@ -205,7 +205,7 @@ export const RemainingTime: React.FC<RemainingTimeProps> = ({ duration, submitTe
 
 
 
-interface QuestionComponentProps {
+interface QuestionComponentProps{
   question?: Question;
   currentQuestion: number;
   answersOfQuestions: { [key: string]: { answer: string; hints: number[]; } };
@@ -691,6 +691,8 @@ const TestPage: React.FC = () => {
 
   }, [testId, user, token]);
 
+
+
   // Start Test Handler
   const startTest = async (testId: string, userId: string, token: string) => {
     if (startingTest) return;
@@ -775,7 +777,7 @@ const TestPage: React.FC = () => {
     );
   }
 
-  if (!Test) {
+  if (!Test || Object.keys(Test).length === 0) {
     return (
       <div className="w-full h-screen flex flex-col items-center justify-center text-center text-muted-foreground">
         <Ban className="w-10 h-10 mb-3 text-destructive" />
@@ -865,7 +867,7 @@ interface MainTestPageRef {
 }
 
 interface MainTestPageProps {
-  Test: Test;
+  Test: TestType;
   answersOfQuestions: { [key: string]: { answer: string; hints: number[]; } };
   setAnswersOfQuestions: React.Dispatch<React.SetStateAction<{ [key: string]: { answer: string; hints: number[]; } }>>;
   statusOfQuestion: { [key: string]: number };
@@ -986,7 +988,7 @@ const MainTestPage = forwardRef<MainTestPageRef, MainTestPageProps>(({
 
     setStatusOfQuestion((prevStatus) => ({
       ...prevStatus,
-      [questionId]: 3, // Mark as Unanswered
+      [questionId]: 3,
     }));
   }
 
@@ -1014,7 +1016,7 @@ const MainTestPage = forwardRef<MainTestPageRef, MainTestPageProps>(({
       {/* Sticky Header */}
       <div className="sticky top-0 w-full h-[40px] p-[5px] bg-sidebar border-b z-30 flex gap-3 justify-center">
         <Badge>{Test.name}</Badge>
-        <h1 className="text-xl font-bold text-center">{Test.course.name} - {Test.topic.name}</h1>
+        <h1 className="text-xl font-bold text-center">{Test.course.name} - {Test.topicName}</h1>
       </div>
 
       {/* Main Content */}
@@ -1026,7 +1028,7 @@ const MainTestPage = forwardRef<MainTestPageRef, MainTestPageProps>(({
           <div className="sticky w-full h-[50px] px-6 bg-sidebar top-0 z-10 flex justify-between overflow-hidden">
             <div className="h-full flex items-center gap-2">
               <h2 className="text-lg font-semibold">Questions: </h2>
-              <Button className="rounded-full">{currentQuestion}/{Test?.testQuestions?.length}</Button>
+              <Button className="rounded-full">{currentQuestion}/{Test.testQuestions.length}</Button>
             </div>
             <div className="h-full flex items-center gap-2">
               <h2 className="text-lg font-semibold">Marking Scheme: </h2>
@@ -1038,7 +1040,7 @@ const MainTestPage = forwardRef<MainTestPageRef, MainTestPageProps>(({
           <div style={{ height: "calc(100vh - 50px)" }}>
             <ScrollArea className="w-full h-full pb-[100px]">
               <Questioncompo
-                question={Test?.testQuestions?.[currentQuestion - 1].question}
+                question={Test.testQuestions?.[currentQuestion - 1].question}
                 currentQuestion={currentQuestion}
                 answersOfQuestions={answersOfQuestions}
                 setAnswersOfQuestions={setAnswersOfQuestions}

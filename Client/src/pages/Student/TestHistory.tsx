@@ -1,15 +1,15 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { BarChart2, BookOpen, CheckCircle, MoreVertical, Search } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Link, useNavigate } from 'react-router-dom';
-import type { TestHistoryDashboardData, TestHistory as TestHistoryType  } from '@/types/studentTestHistory';
+import type { TestHistory as TestHistoryType } from '@/types/studentTestHistory';
 import { Button } from '@/components/ui/button';
 import { CorrectAnswers, TestsAttempted } from './common/PieChart';
 import { useAuth } from '@/hooks/useAuth';
-import { API_BASE } from '@/utils/api';
 import { LoadingSpinnerWithoutHight } from '@/components/layout/LoadingSpinner';
+import { useTestHistory } from '@/hooks/useStudentTestHistory';
 
 
 const Pagination = ({ currentPage, totalPages, onPageChange, maxVisible = 3 }: {
@@ -94,83 +94,16 @@ const Pagination = ({ currentPage, totalPages, onPageChange, maxVisible = 3 }: {
 
 const TestHistory: React.FC = () => {
     const navigate = useNavigate();
-    const { token, user} = useAuth();
+    const { user } = useAuth();
 
-    const [testHistoryDashboardData, setTestHistoryDashboardData] = useState<TestHistoryDashboardData>();
-    const [isLoading, setIsLoading] = useState<boolean>(true);
-    const [testHistory, setTestHistory] = useState<TestHistoryType[]>([]);
-    const [isTestHistoryLoading, setIsTestHistoryLoading] = useState<boolean>(true);
+    const {
+        testHistoryDashboardData,
+        testHistory,
+        isLoading,
+        isTestHistoryLoading,
+        refreshData
+    } = useTestHistory();
 
-    const fetchTestHistoryDashboardData = async (userId: string) => {
-        if (!userId) return;
-
-        setIsLoading(true);
-
-        try {
-            const res = await fetch(`${API_BASE}/student/test/history-dashboard/${userId}`, {
-                method: 'GET',
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-
-            const data = await res.json();
-
-            if (data.success) {
-                const dashboardData: TestHistoryDashboardData = data.data.dashboard;
-                setTestHistoryDashboardData(dashboardData);
-            } else {
-                console.error('API Error:', data.message);
-                setTestHistoryDashboardData(undefined);
-            }
-        } catch (error) {
-            console.error('Error fetching dashboard test history:', error);
-            setTestHistoryDashboardData(undefined);
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    const fetchTestHistoryData = async (userId: string) => {
-        if (!userId) return;
-
-        setIsTestHistoryLoading(true);
-
-        try {
-            const res = await fetch(`${API_BASE}/student/test/history/${userId}`, {
-                method: 'GET',
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-
-            const data = await res.json();
-
-            if (data.success) {
-                const history: TestHistoryType[] = data.data.testHistory;
-                setTestHistory(history);
-            } else {
-                console.error('API Error:', data.message);
-                setTestHistory([]); // optional fallback
-            }
-        } catch (error) {
-            console.error('Error fetching test history:', error);
-            setTestHistory([]);
-        } finally {
-            setIsTestHistoryLoading(false);
-        }
-    };
-
-
-    useEffect(()=>{
-        if(!user || !token){
-            return;
-        }
-
-        fetchTestHistoryDashboardData(user.id);
-        fetchTestHistoryData(user.id);
-
-    }, [user, token]);
 
 
     // Filters Option 
@@ -229,6 +162,24 @@ const TestHistory: React.FC = () => {
     if (!user) {
         navigate('/auth');
         return;
+    }
+
+    if (!testHistoryDashboardData || Object.keys(testHistoryDashboardData).length == 0 || !testHistory) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-40 border rounded-lg bg-gray-50 dark:bg-gray-800 p-6 text-center">
+                <h2 className="text-xl font-semibold text-red-600 mb-2">Something went wrong</h2>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                    We couldn't load your test data. Please try refreshing the data or come back later.
+                </p>
+                <button
+                    onClick={refreshData}
+                    className="px-4 py-2 text-sm font-medium rounded-md bg-blue-600 text-white hover:bg-blue-700 transition"
+                >
+                    🔄 Refresh Data
+                </button>
+            </div>
+        )
+
     }
 
 
