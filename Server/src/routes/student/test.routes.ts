@@ -37,4 +37,15 @@ router.post(
   asyncHandler(studentTestController.analyseImage)
 );
 
+router.get(
+  '/history-dashboard',
+  asyncHandler(studentTestController.getTestHistoryDashboardData)
+);
+
+router.get(
+  '/history-data',
+  asyncHandler(studentTestController.getTestHistoryData)
+);
+
+
 export default router;

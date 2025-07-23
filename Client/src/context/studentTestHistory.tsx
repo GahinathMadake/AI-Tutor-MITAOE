@@ -22,19 +22,16 @@ export const StudentTestHistoryProvider: React.FC<{ children: React.ReactNode }>
   const [isTestHistoryLoading, setIsTestHistoryLoading] = useState(true);
 
   const fetchTestHistoryDashboardData = async () => {
-    if (!user?.id || !token) return;
-
     setIsLoading(true);
 
     try {
-      const res = await fetch(`${API_BASE}/student/test/history-dashboard/${user.id}`, {
+      const res = await fetch(`${API_BASE}/student/test/history-dashboard`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
       const data = await res.json();
       if (data.success) {
         setTestHistoryDashboardData(data.data.dashboard);
-        localStorage.setItem("testDashboardData", JSON.stringify(data.data.dashboard));
       }
     } catch (error) {
       console.error("Failed to fetch dashboard data", error);
@@ -49,14 +46,13 @@ export const StudentTestHistoryProvider: React.FC<{ children: React.ReactNode }>
     setIsTestHistoryLoading(true);
 
     try {
-      const res = await fetch(`${API_BASE}/student/test/history/${user.id}`, {
+      const res = await fetch(`${API_BASE}/student/test/history-data`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
       const data = await res.json();
       if (data.success) {
         setTestHistory(data.data.testHistory);
-        localStorage.setItem("testHistory", JSON.stringify(data.data.testHistory));
       }
     } catch (error) {
       console.error("Failed to fetch test history", error);
@@ -71,25 +67,14 @@ export const StudentTestHistoryProvider: React.FC<{ children: React.ReactNode }>
   };
 
   useEffect(() => {
-    if (!user) return;
-
-    const cachedDashboard = localStorage.getItem("testDashboardData");
-    const cachedHistory = localStorage.getItem("testHistory");
-
-    if (cachedDashboard) {
-      setTestHistoryDashboardData(JSON.parse(cachedDashboard));
-      setIsLoading(false);
-    } else {
-      fetchTestHistoryDashboardData();
+    if(!token){
+      console.log("token Not exist");
+      return;
     }
 
-    if (cachedHistory) {
-      setTestHistory(JSON.parse(cachedHistory));
-      setIsTestHistoryLoading(false);
-    } else {
-      fetchTestHistory();
-    }
-  }, [user]);
+    fetchTestHistory();
+    fetchTestHistoryDashboardData();
+  }, [token]);
 
   return (
     <TestHistoryContext.Provider
