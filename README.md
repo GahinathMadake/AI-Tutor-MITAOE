@@ -116,466 +116,226 @@ Users (Students) (Many) ← → (Many) Courses (via Enrollments)
 
 #### 1. User Table
 ```typescript
-interface User {
-  id: string;                    // UUID Primary Key
-  name: string;                  // Full name
-  username: string;              // Unique username
-  prn: number;                   // Unique PRN number
-  email: string;                 // Unique email
-  password: string;              // Hashed password
-  role: Role;                    // ADMIN | TEACHER | STUDENT
-  schoolId?: string;             // Optional foreign key to School
-  createdAt: Date;               // Creation timestamp
-  
-  // Relations
-  teachingCourses: Course[];     // Courses taught (teachers)
-  enrollments: Enrollment[];     // Course enrollments (students)
-  createdTests: Test[];          // Tests created (teachers)
-  createdQuestions: Question[];  // Questions created (teachers)
-  testStatuses: TestStatus[];    // Test progress tracking
-  testSubmissions: TestSubmission[]; // Test submissions
-  notifications: Notification[]; // User notifications
-}
-```
-
-#### 2. School Table
-```typescript
-interface School {
-  id: string;                    // UUID Primary Key
-  name: string;                  // Unique school name
-  createdAt: Date;               // Creation timestamp
-  
-  // Relations
-  users: User[];                 // School users
-  courses: Course[];             // School courses
-}
-```
-
-#### 3. Semester Table
-```typescript
-interface Semester {
-  id: string;                    // UUID Primary Key
-  name: string;                  // Semester name (e.g., "Fall 2024")
-  createdAt: Date;               // Creation timestamp
-  
-  // Relations
-  courses: Course[];             // Semester courses
-}
-```
-
-#### 4. Course Table
-```typescript
-interface Course {
-  id: string;                    // UUID Primary Key
-  name: string;                  // Course name
-  description?: string;          // Optional description
-  enrollmentKey: string;         // Unique enrollment key
-  teacherId: string;             // Foreign key to User (teacher)
-  schoolId: string;              // Foreign key to School
-  semesterId: string;            // Foreign key to Semester
-  createdAt: Date;               // Creation timestamp
-  
-  // Relations
-  teacher: User;                 // Course teacher
-  school: School;                // Associated school
-  semester: Semester;            // Associated semester
-  chapters: Chapter[];           // Course chapters
-  enrollments: Enrollment[];     // Student enrollments
-  tests: Test[];                 // Course tests
-  questions: Question[];         // Course questions
-}
-```
-
-#### 5. Chapter Table
-```typescript
-interface Chapter {
-  id: string;                    // UUID Primary Key
-  name: string;                  // Chapter name
-  courseId: string;              // Foreign key to Course
-  createdAt: Date;               // Creation timestamp
-  
-  // Relations
-  course: Course;                // Parent course
-  topics: Topic[];               // Chapter topics
-}
-```
-
-#### 6. Topic Table
-```typescript
-interface Topic {
-  id: string;                    // UUID Primary Key
-  name: string;                  // Topic name
-  chapterId: string;             // Foreign key to Chapter
-  createdAt: Date;               // Creation timestamp
-  
-  // Relations
-  chapter: Chapter;              // Parent chapter
-  tests: Test[];                 // Topic tests
-}
-```
-
-#### 7. Test Table
-```typescript
-interface Test {
-  id: string;                    // UUID Primary Key
-  name: string;                  // Test name
-  totalMarks: number;            // Total marks
-  duration: number;              // Duration in minutes
-  startTime: Date;               // Test start time
-  endTime: Date;                 // Test end time
-  maxAttempts: number;           // Maximum attempts allowed
-  courseId: string;              // Foreign key to Course
-  teacherId: string;             // Foreign key to User (teacher)
-  topicId: string;               // Foreign key to Topic
-  createdAt: Date;               // Creation timestamp
-  
-  // Relations
-  course: Course;                // Associated course
-  teacher: User;                 // Test creator
-  topic: Topic;                  // Associated topic
-  testQuestions: TestQuestion[]; // Test questions (many-to-many)
-  testStatuses: TestStatus[];    // Student test statuses
-  testSubmissions: TestSubmission[]; // Test submissions
-}
-```
-
-#### 8. Question Table
-```typescript
-interface Question {
-  id: string;                    // UUID Primary Key
-  text: string;                  // Question text
-  type: QuestionType;            // MCQ | DIRECT_ANSWER | CODING
-  difficulty: number;            // Difficulty level (1-5)
-  options: string[];             // Multiple choice options
-  correctAnswer: string;         // Correct answer
-  hints: string[];               // Hints array
-  problemStatement?: string;     // Coding problem statement
-  inputFormat?: string;          // Coding input format
-  outputFormat?: string;         // Coding output format
-  constraints?: string;          // Coding constraints
-  courseId: string;              // Foreign key to Course
-  teacherId: string;             // Foreign key to User (teacher)
-  createdAt: Date;               // Creation timestamp
-  
-  // Relations
-  course: Course;                // Associated course
-  teacher: User;                 // Question creator
-  testCases: TestCase[];         // Coding test cases
-  testQuestions: TestQuestion[]; // Test associations
-  testSubmissions: TestSubmission[]; // Student submissions
-}
-```
-
-#### 9. TestCase Table
-```typescript
-interface TestCase {
-  id: string;                    // String Primary Key (not UUID)
-  questionId: string;            // Foreign key to Question
-  input: string;                 // Input data
-  expectedOutput: string;        // Expected output
-  isHidden: boolean;             // Hidden test case flag
-  createdAt: Date;               // Creation timestamp
-  
-  // Relations
-  question: Question;            // Associated question
-}
-```
-
-#### 10. Enrollment Table
-```typescript
-interface Enrollment {
-  id: string;                    // UUID Primary Key
-  studentId: string;             // Foreign key to User (student)
-  courseId: string;              // Foreign key to Course
-  status: EnrollmentStatus;      // ENROLLED | UNENROLLED
-  completedTestIds: string[];    // Array of completed test IDs
-  enrolledAt: Date;              // Enrollment timestamp
-  
-  // Relations
-  student: User;                 // Enrolled student
-  course: Course;                // Enrolled course
-}
-```
-
-#### 11. TestQuestion Table (Junction)
-```typescript
-interface TestQuestion {
-  id: string;                    // UUID Primary Key
-  testId: string;                // Foreign key to Test
-  questionId: string;            // Foreign key to Question
-  isValid: boolean;              // Question validity flag
-  
-  // Relations
-  test: Test;                    // Associated test
-  question: Question;            // Associated question
-}
-```
-
-#### 12. TestStatus Table
-```typescript
-interface TestStatus {
-  id: string;                    // UUID Primary Key
-  studentId: string;             // Foreign key to User (student)
-  testId: string;                // Foreign key to Test
-  status: TestStatusType;        // NOT_STARTED | IN_PROGRESS | COMPLETED
-  cheatingReason?: string;       // Optional cheating detection reason
-  lastUpdated: Date;             // Last update timestamp
-  
-  // Relations
-  student: User;                 // Student taking test
-  test: Test;                    // Associated test
-}
-```
-
-#### 13. TestSubmission Table
-```typescript
-interface TestSubmission {
-  id: string;                    // UUID Primary Key
-  studentId: string;             // Foreign key to User (student)
-  testId: string;                // Foreign key to Test
-  questionId: string;            // Foreign key to Question
-  answer: string;                // Student's answer
-  marksObtained: number;         // Marks obtained (default: 0)
-  hintsUsed: number;             // Number of hints used (default: 0)
-  submittedAt: Date;             // Submission timestamp
-  
-  // Relations
-  student: User;                 // Student who submitted
-  test: Test;                    // Associated test
-  question: Question;            // Associated question
-}
-```
-
-#### 14. Notification Table
-```typescript
-interface Notification {
-  id: string;                    // UUID Primary Key
-  userId: string;                // Foreign key to User
-  message: string;               // Notification message
-  type: NotificationType;        // Notification type enum
-  seen: boolean;                 // Seen status (default: false)
-  createdAt: Date;               // Creation timestamp
-  
-  // Relations
-  user: User;                    // Notification recipient
-}
-```
-
-### Updated Database Tables
-
-#### 1. User Table
-```typescript
-interface User {
+Interface users {
   documentId: string;
-  createdAt: string; // or Date
-  updatedAt: string; // or Date
+  createdAt: string;
+  updatedAt: string;
+
   user_id: string;
   name: string;
-  prn_number: number;
+  prn_number: ;
   email: string;
-  role: 'STUDENT' | 'TEACHER' | 'ADMIN'; // depending on your enum/enum-like constraint
+  role: 'STUDENT' | 'TEACHER' | 'ADMIN';   // enum -like constraint -> Default STUDENT
   school_id: string;
 }
+
 
 ```
 
 #### 2. School Table
 ```typescript
-interface School {
+interface school {
   documentId: string;
   createdAt: string;
   updatedAt: string;
+
   school_id: string;
-  school_name: string;
-  creation_timestamp: string;
+  school_name: string; 
 }
 ```
 
 #### 3. Semester Table
 ```typescript
-interface Semester {
+interface semester {
   documentId: string;
   createdAt: string;
   updatedAt: string;
+  
   semester_id: string;
   semester_name: string;
-  creation_timestamp: string;
 }
 ```
 
 #### 4. Course Table
 ```typescript
-interface Course {
+interface course {
   documentId: string;
-  createdAt: string; // or Date
-  updatedAt: string; // or Date
+  createdAt: string;
+  updatedAt: string;
+
   course_id: string;
   course_name: string;
-  description?: string; // optional if nullable
-  teacher_id: string; // foreign key to User
-  school_id: string;  // foreign key to School
-  semester_id: string; // foreign key to Semester
+  description?: string;
   enrollment_key: string;
-  creation_timestamp: string; // or Date
-}
 
+  teacher_id: string;
+  school_id: string;
+  semester_id: string;
+}
 ```
 
 #### 5. Chapter Table
 ```typescript
-interface Chapter {
+interface chapter {
   documentId: string;
   createdAt: string;
   updatedAt: string;
+
   chapter_id: string;
   chapter_name: string;
+
   course_id: string;
-  creation_timestamp: string;
 }
 ```
 
 #### 6. Topic Table
 ```typescript
-interface Topic {
+interface topic {
   documentId: string;
   createdAt: string;
   updatedAt: string;
+
   topic_id: string;
   topic_name: string;
+
   chapter_id: string;
-  creation_timestamp: string;
 }
 ```
 
 #### 7. Test Table
 ```typescript
-interface Test {
+interface test {
   documentId: string;
   createdAt: string;
   updatedAt: string;
+
   test_id: string;
   test_name: string;
   total_marks: number;
-  course_id: string;
-  teacher_id: string;
-  topic_id: string;
-  creation_timestamp: string;
   start_time: string;
   end_time: string;
   duration_minutes: number;
   maximum_attempts_allowed: number;
+
+  course_id: string;
+  teacher_id: string;
+  topic_id: string;
 }
+
 ```
 
 #### 8. Question Table
 ```typescript
-interface Question {
+interface question {
   documentId: string;
-  createdAt: string; // ISO timestamp
-  updatedAt: string; // ISO timestamp
+  createdAt: string;
+  updatedAt: string;
+
   question_id: string;
   question_text: string;
   difficulty_level: number;
-  question_type: 'MCQ' | 'Subjective' | 'Coding'; // extend as needed
-  options: string[]; // Only for MCQ
+  question_type: 'MCQ' | 'DIRECT_ANWER' | 'CODING'; 
+  options: string[];
   hints: string[];
   correct_answer: string;
+
+  problem_statement?: string;
+  input_output_format?: string;
+  constraints?: string;
+
   course_id: string;
   teacher_id: string;
-  creation_timestamp: string; // ISO timestamp
-  problem_statement?: string | null;
-  input_output_format?: string | null;
-  constraints?: string[] | null;
 }
 ```
 
 #### 9. TestCase Table
 ```typescript
-interface TestCase {
-  documentId: string;              // Unique ID for the document
-  createdAt: string;               // ISO timestamp (e.g. "2025-07-17T10:45:00Z")
-  updatedAt: string;               // ISO timestamp
-  testcase_id: string;            // Unique test case identifier
-  question_id: string;            // The question this testcase belongs to
-  input: string;                  // Input to be passed to the student's code
-  expected_output: string;        // What the output should be
-  hidden: boolean;                // Whether the test case is visible to students
-  creation_timestamp: string;    // Possibly same as createdAt
+interface testcase {
+  documentId: string;
+  createdAt: string;
+  updatedAt: string;
+
+  testcase_id: string; 
+  question_id: string; 
+  input: string; 
+  expected_output: string;
+  hidden: boolean;
 }
 ```
 
 #### 10. Enrollment Table
 ```typescript
-interface Enrollment {
+interface enrollment {
   documentId: string;
   createdAt: string;
   updatedAt: string;
+
   enrollment_id: string;
   student_id: string;
   course_id: string;
-  enrollment_status: string;
-  enrollment_timestamp: string;
-  completed_test_ids: string[]; // Assuming it's stored as an array in ClickHouse
+  enrollment_status: "ENROLLED" | "UNENROLLED";
+  completed_test_ids: string[];
 }
 ```
 
 #### 11. TestQuestion Table (Junction)
 ```typescript
-interface TestQuestion {
-  documentId: string;           // Unique document ID
-  createdAt: string;            // ISO date string (e.g. "2025-07-17T12:30:00Z")
-  updatedAt: string;            // ISO date string
-  test_question_id: string;     // Unique identifier for this test-question link
-  test_id: string;              // Reference to the test
-  question_id: string;          // Reference to the question
-  is_valid: boolean;            // Whether this link is valid (soft delete or active flag)
+interface testquestion {
+  documentId: string;
+  createdAt: string;
+  updatedAt: string;
+  
+  test_question_id: string; 
+  test_id: string; 
+  question_id: string;  
+  is_valid: boolean; 
 }
 ```
 
 #### 12. TestStatus Table
 ```typescript
-interface TestStatus {
-  documentId: string;               // Unique document identifier
-  createdAt: string;                // ISO timestamp
-  updatedAt: string;                // ISO timestamp
-  test_status_id: string;          // Unique status ID
-  student_id: string;              // Student identifier
-  test_status: 'not_started' | 'started' | 'in_progress' | 'completed'; // or string
-  cheating_reason?: string | null; // Reason for marking as cheating (optional)
-  last_updated_timestamp: string;  // ISO timestamp when status was last changed
-}
+interface teststatus {
+  documentId: string;
+  createdAt: string;
+  updatedAt: string;
 
+  test_status_id: string; 
+  test_id: string;
+  student_id: string;
+  test_status: ' NOT_STARTED' | ' IN_PROGRESS' | ' COMPLETED'; 
+  cheating_reason?: string;
+}
 ```
 
 #### 13. TestSubmission Table
 ```typescript
-interface TestSubmission{
-  documentId: string;           // Unique document ID (likely MongoDB's ObjectId or UUID)
-  createdAt: string;            // ISO date string or Date object
-  updatedAt: string;            // ISO date string or Date object
-  test_submission_id: string;   // Foreign key to submission
-  student_id: string;           // ID of the student
-  test_id: string;              // ID of the test
-  question_id: string;          // ID of the question
-  student_answer: string;       // Student's answer text/value
-  marks_obtained: number;        // Marks awarded
-  hints_used_count: number;      // Number of hints taken
-  submission_timestamp: string; 
+interface testsubmission {
+  documentId: string;
+  createdAt: string;
+  updatedAt: string;
+
+  test_submission_id: string;
+  student_id: string;
+  test_id: string;
+  question_id: string;
+  student_answer: string; 
+  marks_obtained: number; 
+  hints_used_count: number; 
 }
 ```
 
 #### 14. Notification Table
 ```typescript
 interface Notification {
-  documentId: string;               // Unique document ID (UUID or MongoDB ObjectId)
-  createdAt: string;                // ISO timestamp (e.g. "2025-07-17T12:00:00Z")
-  updatedAt: string;                // ISO timestamp
-  notification_id: string;         // Unique notification ID
-  user_id: string;                 // ID of the recipient user
-  message_content: string;         // Notification text
-  notification_type: 'info' | 'warning' | 'alert' | string; // Can extend as enum or keep generic
-  creation_timestamp: string;      // Original creation time (may be same as createdAt)
-  seen_status: boolean;            // True if user has seen the notification
+  documentId: string;
+  createdAt: string;
+  updatedAt: string;
+
+  notification_id: string; 
+  user_id: string;
+  message_content: string;     
+  notification_type: ' CREATED_TEST' | ' ADMIN_NOTIFICATION' | ' CREATED_COURSE' | ‘COURSE_ENROLLED’;
+  seen_status: Boolean;
 }
 ```
 
