@@ -1,6 +1,6 @@
 import { Response } from 'express';
-import { userService } from '../services/user.service';
 import { ApiResponse, AuthenticatedRequest } from '../types/auth';
+import { testService } from '../services/test.services';
 
 class StudentTestController {
 
@@ -8,10 +8,16 @@ class StudentTestController {
         const user = req.user!;
         const testId = req.query.testId as string;
 
+        const {testData, testStatusData} = await testService.getTestBasicDetails(user.id, testId);
+
+        const test = testData.data[0];
+        test.testStatuses = testStatusData.data;
+
+        console.log(test);
 
         const response = {
             success: true,
-            data: { test }
+            data: { test:test }
         };
 
         res.status(200).json(response);
@@ -21,47 +27,12 @@ class StudentTestController {
         const user = req.user!;
         const testId = req.query.testId as string;
 
-        const submissions = [
-            {
-                id: "sub_1",
-                studentId: "user_123",
-                testId: "test_456",
-                questionId: "q_789",
-                answer: "React component lifecycle",
-                marksObtained: 5,
-                hintsUsed: 0,
-                submittedAt: "2023-11-15T09:30:00Z",
-                question: {
-                    id: "q_789",
-                    questionText: "Explain component lifecycle methods in React",
-                    correctAnswer: "mounting, updating, unmounting",
-                    marks: 5,
-                    hints: ["Think about the three main phases"]
-                }
-            },
-            {
-                id: "sub_2",
-                studentId: "user_123",
-                testId: "test_456",
-                questionId: "q_790",
-                answer: null,
-                marksObtained: 0,
-                hintsUsed: 1,
-                submittedAt: "2023-11-15T09:35:00Z",
-                question: {
-                    id: "q_790",
-                    questionText: "What is JSX?",
-                    correctAnswer: "JavaScript XML",
-                    marks: 5,
-                    hints: ["Acronym expansion"]
-                }
-            }
-        ]
+        const {submissionData} = await testService.getTestAnalytics(user.id, testId)
 
 
         const response: ApiResponse = {
             success: true,
-            data: { submissions }
+            data: { submission:submissionData.data }
         };
 
         res.status(200).json(response);
@@ -75,7 +46,7 @@ class StudentTestController {
             id: "test_123",
             name: "Midterm Assessment",
             totalMarks: 100,
-            duration: 60, // in minutes
+            duration: 60,
             maxAttempts: 1,
             startTime: "2025-08-15T09:00:00Z",
             endTime: "2025-08-15T10:00:00Z",

@@ -92,8 +92,6 @@ class StudentCourseController {
         course.chapters = chapters;
         const enrollment = enrollmentData.data[0];
 
-        console.log("Courses = ", course);
-        console.log("Enrollment = ", enrollment);
 
         const response: ApiResponse = {
             success: true,

@@ -11,14 +11,6 @@ export interface Question {
   createdAt: Date;
 }
 
-
-export interface TestStatus {
-  id: string;
-  studentId: string;
-  status: TestStatusType;
-  cheatingReason: string;
-}
-
 export interface TestSubmissionType {
   id: string;
   answer: string;
@@ -26,6 +18,23 @@ export interface TestSubmissionType {
   hintsUsed: number;
 
   question: Question;
+}
+
+export interface TestAnalyticsData {
+  testAnswers: TestSubmissionType[];
+  correctQuestions: number;
+  wrongQuestions: number;
+  skippedQuestions: number;
+  totalMarks: number;
+  correctMarksScored: number;
+  hintsMarks: number;
+}
+
+export interface TestStatus {
+  id: string;
+  studentId: string;
+  status: TestStatusType;
+  cheatingReason: string;
 }
 
 export interface TestType {
@@ -42,14 +51,4 @@ export interface TestType {
   testQuestions:number;
 
   testStatuses: TestStatus[];
-}
-
-export interface TestAnalyticsData {
-  testAnswers: TestSubmissionType[];
-  correctQuestions: number;
-  wrongQuestions: number;
-  skippedQuestions: number;
-  totalMarks: number;
-  correctMarksScored: number;
-  hintsMarks: number;
 }

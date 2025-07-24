@@ -11,6 +11,8 @@ export const authenticateToken = async (
   next: NextFunction
 ): Promise<void> => {
   try {
+    console.log("🔐 Request Received On : ", req.path);
+    
     const authHeader = req.headers.authorization;
     const token = authHeader?.split(' ')[1];
 

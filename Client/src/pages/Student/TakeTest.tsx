@@ -255,19 +255,19 @@ const TakeTest: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [testDetails, setTestDetails] = useState<TestType>();
 
+  const loadTest = async () => {
+    if (!testId) {
+      alert('Test ID required');
+      return;
+    }
+
+    setLoading(true);
+    const test = await getTest(testId);
+    if (test) setTestDetails(test);
+    setTimeout(() => setLoading(false), 500);
+  };
+  
   useEffect(() => {
-    const loadTest = async () => {
-      if (!testId) {
-        alert('Test ID required');
-        return;
-      }
-
-      setLoading(true);
-      const test = await getTest(testId);
-      if (test) setTestDetails(test);
-      setTimeout(() => setLoading(false), 500);
-    };
-
     loadTest();
   }, [testId]);
 
@@ -305,11 +305,7 @@ const TakeTest: React.FC = () => {
             </p>
             <button
               className="mt-3 px-3 py-1 text-sm border border-red-300 text-red-600 rounded hover:bg-red-100 transition"
-              onClick={() =>
-                testId
-                  ? getTest(testId)
-                  : alert("Test ID and token are required")
-              }
+              onClick={loadTest}
             >
               <RefreshCw className="inline-block h-4 w-4 mr-1" />
               Try Again

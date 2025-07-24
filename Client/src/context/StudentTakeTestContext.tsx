@@ -38,7 +38,7 @@ export const TakeTestProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
       const result = await response.json();
 
-      if (result.success && result.data.test) {
+      if (result.success) {
         testCache.set(testId, result.data.test);
         return result.data.test;
       } else {
