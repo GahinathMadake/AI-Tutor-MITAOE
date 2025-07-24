@@ -41,7 +41,7 @@ export const StudentCoursesProvider: React.FC<{ children: React.ReactNode }> = (
         return [];
       }
     } catch (error) {
-      console.error('Fetch error:', error);
+      console.error('Courses Fetch error:', error);
       return [];
     }
   };

@@ -9,46 +9,6 @@ class StudentTestController {
         const testId = req.query.testId as string;
 
 
-        const test = {
-            id: "test_123",
-            name: "Midterm Exam",
-            duration: 60,
-            totalMarks: 100,
-            startTime: "2024-08-15T09:00:00Z",
-            endTime: "2024-11-15T10:00:00Z",
-            course: {
-                name: "Advanced React"
-            },
-            topic: {
-                name: "Hooks and State Management"
-            },
-            teacher: {
-                name: "Dr. Smith"
-            },
-            testStatuses: [
-                {
-                    id: "status_1",
-                    status: "completed",
-                    score: 85,
-                    completedAt: "2023-11-15T09:45:00Z"
-                }
-            ],
-            testQuestions: [
-                {
-                    id: "q1",
-                    questionText: "Explain useState hook",
-                    marks: 10,
-                    type: "long-answer"
-                },
-                {
-                    id: "q2",
-                    questionText: "What is React context?",
-                    marks: 15,
-                    type: "short-answer"
-                }
-            ]
-        };
-
         const response = {
             success: true,
             data: { test }

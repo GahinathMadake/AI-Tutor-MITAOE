@@ -45,6 +45,7 @@ export const SingleCourseProvider: React.FC<{ children: React.ReactNode }> = ({ 
           enrollment: result.data.enrollment,
         };
 
+        console.log(data);
         courseCache.set(courseId, data);
         return data;
       } else {

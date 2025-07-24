@@ -66,6 +66,7 @@ export const CourseEnroll = () => {
             setEnrollmentError(result.message || 'Failed to enroll');
         }
         else{
+            console.log
             setEnrollmentError(result.message || "Successfully Enrolled");
             loadCourse();
         }

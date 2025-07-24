@@ -31,9 +31,9 @@ class StudentSemesterController {
                     id: course.id,
                     name: course.name,
                     description: course.description,
-                    school: { name: course.school_name },
+                    schoolName: course.school_name,
                     numberOfEnrollments: course.number_of_enrollments,
-                    teacher: { name: course.teacher_name }
+                    teacherName: course.teacher_name,
                 });
             }
         }

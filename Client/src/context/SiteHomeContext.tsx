@@ -1,8 +1,7 @@
 import React, { createContext, useEffect, useState } from 'react';
-import type { Semester, School, studentSiteHomeContextType, CourseEnrollContextType, CourseEnrollmentType } from '@/types/StudentSiteHome';
+import type { Semester, School, studentSiteHomeContextType} from '@/types/StudentSiteHome';
 import { API_BASE } from '@/utils/api';
 import { useAuth } from '@/hooks/useAuth';
-import { useNavigate } from 'react-router-dom';
 
 export const StudentSiteHomeContext = createContext<studentSiteHomeContextType | undefined>(undefined);
 

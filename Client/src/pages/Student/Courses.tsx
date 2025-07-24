@@ -269,7 +269,7 @@ export const SingleCourse = () => {
             <CardHeader>
               <div className="flex flex-wrap gap-6">
                 <ProgressCircular progress={
-                  course.TotalTests
+                  course.TotalTests > 0
                     ? Math.round((enrollment.completedTestIds.length / course.TotalTests) * 100)
                     : 0
                 } size={60}
@@ -277,7 +277,7 @@ export const SingleCourse = () => {
 
                 <div>
                   <h1 className="text-xl placeholder-opacity-85 font-semibold">{course.name}</h1>
-                  <p className="italic text-sm">by {course.teacher.name}</p>
+                  <p className="italic text-sm">by {course.teacherName}</p>
 
                   <p className="my-4 text-md font-semibold">"{course.description}"</p>
 
@@ -288,7 +288,7 @@ export const SingleCourse = () => {
                     </div>
                     <div className="flex gap-2">
                       <TvMinimal className="w-[20px]" />
-                      <p><label className="font-semibold">Branch:</label> {course.school.name}</p>
+                      <p><label className="font-semibold">Branch:</label> {course.schoolName}</p>
                     </div>
                   </div>
                 </div>
@@ -342,7 +342,7 @@ const Courses = () => {
     };
 
     getCourses();
-  }, [progress, fetchCoursesByProgress]);
+  }, [progress]);
 
 
   /*------------------------- Search Query Optimisation -------------------------*/

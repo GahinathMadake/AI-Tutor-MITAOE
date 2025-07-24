@@ -18,7 +18,7 @@ const CourseCard: React.FC<CourseCardProps> = ({ course }) => {
       <img src={courseImage} alt={course.name} className="w-full object-cover rounded-md" />
 
       <div className="py-3 flex justify-between">
-        <IconAndLabel item={{label:String(course.school.name), icon:LayoutGrid}} />
+        <IconAndLabel item={{label:String(course.schoolName), icon:LayoutGrid}} />
         <IconAndLabel item={{ label: String(course.numberOfEnrollments || 0), icon: User }} />
       </div>
       
@@ -45,7 +45,7 @@ const CourseCard: React.FC<CourseCardProps> = ({ course }) => {
             alt={course.teacher?.name || "User"}
           /> */}
           <AvatarFallback>
-            {course.teacher?.name
+            {course.teacherName
               ?.split(" ")
               .slice(0, 2)
               .map((n) => n[0])
@@ -53,7 +53,7 @@ const CourseCard: React.FC<CourseCardProps> = ({ course }) => {
           </AvatarFallback>
         </Avatar>
 
-        <p className="ml-2 opacity-90">{course.teacher?.name || "Unknown"}</p>
+        <p className="ml-2 opacity-90">{course.teacherName || "Unknown"}</p>
       </div>
 
     </div>

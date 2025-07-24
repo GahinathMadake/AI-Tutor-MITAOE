@@ -1,4 +1,4 @@
-import React, { createContext} from 'react';
+import React, { createContext } from 'react';
 import { API_BASE } from '@/utils/api';
 import { useAuth } from '@/hooks/useAuth';
 import type { CourseEnrollContextType, CourseEnrollmentType } from '@/types/StudentSiteHome';
@@ -56,10 +56,15 @@ export const CourseEnrollProvider: React.FC<{ children: React.ReactNode }> = ({ 
       });
 
       const data = await res.json();
+      console.log(data);
       if (data.success) {
-        return { success: true, message:"Successfully enrolled into Course!" };
+        return { success: true, message: "Successfully enrolled into Course!" };
       } else {
-        return { success: false, message: data.message || 'Enrollment failed' };
+        // Extract only the first line of the stack trace
+        const rawMessage = data.stack || 'Enrollment failed';
+        const firstLine = rawMessage.split('\n')[0].replace('Error: ', '').trim();
+
+        return { success: false, message: firstLine || 'Enrollment failed' };
       }
     } catch (error: any) {
       console.error('Enrollment error:', error);

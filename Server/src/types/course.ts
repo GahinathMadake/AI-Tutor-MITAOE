@@ -4,18 +4,10 @@ export interface CourseCard {
   description: string;
   schoolName: string;
   teacherName: string;
-
   numberOfEnrollments: number;
   totalTests: number;
   completedTests: number;
 }
-
-export interface EnrollmentType {
-  id: string;
-  courseId: string;
-  completedTestIds: string[];
-}
-
 
 export interface TestType {
   id: string;
