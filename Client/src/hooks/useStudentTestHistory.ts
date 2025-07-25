@@ -1,4 +1,4 @@
-import { TestHistoryContext } from "@/context/studentTestHistory";
+import { TestHistoryContext } from "@/context/studentTestHistoryContext";
 import { useContext } from "react";
 
 export const useTestHistory = () => {

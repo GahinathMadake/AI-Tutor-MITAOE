@@ -164,20 +164,44 @@ const TestHistory: React.FC = () => {
         return;
     }
 
+    if(isLoading){
+        return (
+            <DashboardLayout
+                breadcrumbItems={[
+                    { label: "Dashboard", isCurrentPage: false, href: "/dashboard" },
+                    { label: `Test-History`, isCurrentPage: true },
+                ]}
+            >
+                <div className="flex items-center justify-center w-full min-h-80">
+                    <LoadingSpinnerWithoutHight />
+                </div>
+            </DashboardLayout>
+        )
+    }
+
     if (!testHistoryDashboardData || Object.keys(testHistoryDashboardData).length == 0 || !testHistory) {
         return (
-            <div className="flex flex-col items-center justify-center min-h-40 border rounded-lg bg-gray-50 dark:bg-gray-800 p-6 text-center">
-                <h2 className="text-xl font-semibold text-red-600 mb-2">Something went wrong</h2>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                    We couldn't load your test data. Please try refreshing the data or come back later.
-                </p>
-                <button
-                    onClick={refreshData}
-                    className="px-4 py-2 text-sm font-medium rounded-md bg-blue-600 text-white hover:bg-blue-700 transition"
-                >
-                    🔄 Refresh Data
-                </button>
-            </div>
+            <DashboardLayout
+                breadcrumbItems={[
+                    { label: "Dashboard", isCurrentPage: false, href: "/dashboard" },
+                    { label: `Test-History`, isCurrentPage: true },
+                ]}
+            >
+                <div className='flex justify-center items-center min-h-80'>
+                    <div className="flex flex-col items-center justify-center min-h-40 border rounded-lg bg-gray-50 dark:bg-gray-800 p-6 text-center">
+                        <h2 className="text-xl font-semibold text-red-600 mb-2">Something went wrong</h2>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                            We couldn't load your test data. Please try refreshing the data or come back later.
+                        </p>
+                        <button
+                            onClick={refreshData}
+                            className="px-4 py-2 text-sm font-medium rounded-md bg-blue-600 text-white hover:bg-blue-700 transition"
+                        >
+                            🔄 Refresh Data
+                        </button>
+                    </div>
+                </div>
+            </DashboardLayout>
         )
 
     }
@@ -211,7 +235,6 @@ const TestHistory: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* Right: Dropdown Menu */}
                     <DropdownMenu>
                         <DropdownMenuTrigger className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700">
                             <MoreVertical className="h-5 w-5" />
@@ -220,252 +243,241 @@ const TestHistory: React.FC = () => {
                             <DropdownMenuItem onClick={() => navigate('/dashboard/profile')}>
                                 👤 View Profile
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => navigate('/courses/:progress')}>
+                            <DropdownMenuItem onClick={() => navigate('/courses/ongoing')}>
                                 📘 Explore Courses
                             </DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
                 </div>
 
-                <>
+                {/* Dashboard for user */}
+                <div className='p-4 border'>
+                    <div className="mb-4">
+                        <h1 className="font-semibold text-xl sm:text-2xl">📊 Quick Statistics</h1>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">Overview of your test activity</p>
+                    </div>
+
                     {
-                        isLoading ?
-                            <div className="flex items-center justify-center w-full min-h-10">
-                                <LoadingSpinnerWithoutHight />
-                            </div>
-                            :
-                            <>
-                                {/* Dashboard for user */}
-                                <div className='p-4 border'>
-                                    <div className="mb-4">
-                                        <h1 className="font-semibold text-xl sm:text-2xl">📊 Quick Statistics</h1>
-                                        <p className="text-sm text-gray-600 dark:text-gray-400">Overview of your test activity</p>
+                        testHistoryDashboardData &&
+
+                        <>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                                <div className="flex items-center p-4 border rounded-lg bg-gray-50 dark:bg-gray-800">
+                                    <CheckCircle className="text-green-500 w-6 h-6 mr-3" />
+                                    <div>
+                                        <p className="text-sm text-gray-500">Tests Attempted</p>
+                                        <h2 className="text-lg font-semibold">{testHistoryDashboardData.testAttempted || 0}</h2>
                                     </div>
-
-                                    {
-                                        testHistoryDashboardData &&
-
-                                        <>
-                                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                                                <div className="flex items-center p-4 border rounded-lg bg-gray-50 dark:bg-gray-800">
-                                                    <CheckCircle className="text-green-500 w-6 h-6 mr-3" />
-                                                    <div>
-                                                        <p className="text-sm text-gray-500">Tests Attempted</p>
-                                                        <h2 className="text-lg font-semibold">{testHistoryDashboardData.testAttempted || 0}</h2>
-                                                    </div>
-                                                </div>
-
-                                                <div className="flex items-center p-4 border rounded-lg bg-gray-50 dark:bg-gray-800">
-                                                    <BarChart2 className="text-blue-500 w-6 h-6 mr-3" />
-                                                    <div>
-                                                        <p className="text-sm text-gray-500">Questions Solved</p>
-                                                        <h2 className="text-lg font-semibold">{testHistoryDashboardData.questionsSolved || 0}</h2>
-                                                    </div>
-                                                </div>
-
-                                                <div className="flex items-center p-4 border rounded-lg bg-gray-50 dark:bg-gray-800">
-                                                    <BookOpen className="text-yellow-500 w-6 h-6 mr-3" />
-                                                    <div>
-                                                        <p className="text-sm text-gray-500">Courses Enrolled</p>
-                                                        <h2 className="text-lg font-semibold">{testHistoryDashboardData.coursesEnrolled || 0}</h2>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div className="mt-6">
-                                                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                                                    <div className="lg:col-span-2">
-                                                        <TestsAttempted
-                                                            data={testHistoryDashboardData.monthWiseTestAttempted}
-                                                        />
-                                                    </div>
-
-                                                    <div className="lg:col-span-1">
-                                                        <CorrectAnswers
-                                                            correctQuestions={testHistoryDashboardData.correctQuestions || 0}
-                                                            wrongQuestions={testHistoryDashboardData.wrongQuestions || 0}
-                                                            skippedQuestions={testHistoryDashboardData.unansweredQuestions || 0}
-                                                            para={"Question wise analysis for the Questions you attempted"}
-                                                        />
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </>
-                                    }
                                 </div>
 
-                                {/* main History */}
-                                <div className='mt-6'>
-                                    <div className="mb-4">
-                                        <h1 className="font-semibold text-lg sm:text-md">Test History</h1>
-                                        <p className="text-sm text-gray-600 dark:text-gray-400">Here you will see you Test history..</p>
+                                <div className="flex items-center p-4 border rounded-lg bg-gray-50 dark:bg-gray-800">
+                                    <BarChart2 className="text-blue-500 w-6 h-6 mr-3" />
+                                    <div>
+                                        <p className="text-sm text-gray-500">Questions Solved</p>
+                                        <h2 className="text-lg font-semibold">{testHistoryDashboardData.questionsSolved || 0}</h2>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center p-4 border rounded-lg bg-gray-50 dark:bg-gray-800">
+                                    <BookOpen className="text-yellow-500 w-6 h-6 mr-3" />
+                                    <div>
+                                        <p className="text-sm text-gray-500">Courses Enrolled</p>
+                                        <h2 className="text-lg font-semibold">{testHistoryDashboardData.coursesEnrolled || 0}</h2>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="mt-6">
+                                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                                    <div className="lg:col-span-2">
+                                        <TestsAttempted
+                                            data={testHistoryDashboardData.monthWiseTestAttempted}
+                                        />
                                     </div>
 
-                                    <div className='space-y-2'>
-                                        <div className='py-2 border-b flex justify-between'>
-                                            <div className="relative w-full max-w-[300px]">
-                                                <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
-                                                    <Search className="h-5 w-5" />
-                                                </span>
-                                                <input
-                                                    type="text"
-                                                    placeholder="Search tests..."
-                                                    onChange={(e) => {
-                                                        setSearchQuery(e.target.value);
-                                                        setCurrentPage(1); // Reset to page 1
-                                                    }}
+                                    <div className="lg:col-span-1">
+                                        <CorrectAnswers
+                                            correctQuestions={testHistoryDashboardData.correctQuestions || 0}
+                                            wrongQuestions={testHistoryDashboardData.wrongQuestions || 0}
+                                            skippedQuestions={testHistoryDashboardData.unansweredQuestions || 0}
+                                            para={"Question wise analysis for the Questions you attempted"}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        </>
+                    }
+                </div>
 
-                                                    className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white"
-                                                />
-                                            </div>
+                {/* main History */}
+                <div className='mt-6'>
+                    <div className="mb-4">
+                        <h1 className="font-semibold text-lg sm:text-md">Test History</h1>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">Here you will see you Test history..</p>
+                    </div>
 
-                                            <div className='pr-6'>
-                                                <select
-                                                    onChange={(e) => {
-                                                        setStatusFilter(e.target.value);
-                                                        setCurrentPage(1); // Reset to page 1
-                                                    }}
-                                                    className="border px-3 py-2 rounded-lg dark:bg-gray-800 text-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500"
-                                                >
-                                                    <option value="all">All Statuses</option>
-                                                    <option value="completed">Completed</option>
-                                                    <option value="in_progress">In Progress</option>
-                                                    <option value="not_started">Not Started</option>
-                                                </select>
-                                            </div>
-                                        </div>
+                    <div className='space-y-2'>
+                        <div className='py-2 border-b flex justify-between'>
+                            <div className="relative w-full max-w-[300px]">
+                                <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
+                                    <Search className="h-5 w-5" />
+                                </span>
+                                <input
+                                    type="text"
+                                    placeholder="Search tests..."
+                                    onChange={(e) => {
+                                        setSearchQuery(e.target.value);
+                                        setCurrentPage(1); // Reset to page 1
+                                    }}
 
-                                        <div className="border shadow-sm w-full">
-                                            <table className="w-full text-left text-sm">
-                                                <thead className="bg-gray-100 dark:bg-gray-700">
-                                                    <tr>
-                                                        <th className="px-4 py-3 font-semibold">Test Details</th>
-                                                        <th className="px-4 py-3 font-semibold">Topic</th>
-                                                        <th className="px-4 py-3 font-semibold">Score</th>
-                                                        <th className="px-4 py-3 font-semibold">Attempted At</th>
-                                                        <th className="px-4 py-3 font-semibold">Status</th>
-                                                        <th className="px-4 py-3 font-semibold">Check</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
+                                    className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white"
+                                />
+                            </div>
+
+                            <div className='pr-6'>
+                                <select
+                                    onChange={(e) => {
+                                        setStatusFilter(e.target.value);
+                                        setCurrentPage(1); // Reset to page 1
+                                    }}
+                                    className="border px-3 py-2 rounded-lg dark:bg-gray-800 text-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500"
+                                >
+                                    <option value="all">All Statuses</option>
+                                    <option value="completed">Completed</option>
+                                    <option value="in_progress">In Progress</option>
+                                    <option value="not_started">Not Started</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div className="border shadow-sm w-full">
+                            <table className="w-full text-left text-sm">
+                                <thead className="bg-gray-100 dark:bg-gray-700">
+                                    <tr>
+                                        <th className="px-4 py-3 font-semibold">Test Details</th>
+                                        <th className="px-4 py-3 font-semibold">Topic</th>
+                                        <th className="px-4 py-3 font-semibold">Score</th>
+                                        <th className="px-4 py-3 font-semibold">Attempted At</th>
+                                        <th className="px-4 py-3 font-semibold">Status</th>
+                                        <th className="px-4 py-3 font-semibold">Check</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {
+                                        isTestHistoryLoading ?
+                                            <tr>
+                                                <td colSpan={6} className="py-6 flex items-center justify-center w-full min-h-10">
+                                                    <LoadingSpinnerWithoutHight />
+                                                </td>
+                                            </tr>
+                                            :
+                                            testHistory && testHistory.length > 0 ?
+                                                <>
                                                     {
-                                                        isTestHistoryLoading ?
-                                                            <tr>
-                                                                <td colSpan={6} className="py-6 flex items-center justify-center w-full min-h-10">
-                                                                    <LoadingSpinnerWithoutHight />
-                                                                </td>
-                                                            </tr>
-                                                            :
-                                                            testHistory && testHistory.length > 0 ?
-                                                                <>
-                                                                    {
 
-                                                                        filteredTests.length > 0 ? (
-                                                                            currentTests.map((test) => (
-                                                                                <tr key={test.id} className="border-t hover:bg-gray-50 dark:hover:bg-gray-700">
-                                                                                    {/* Test details */}
-                                                                                    <td className="px-4 py-3">
-                                                                                        <div className="font-semibold">{test.name}</div>
-                                                                                        <div className="text-gray-500">
-                                                                                            {test.courseName}
-                                                                                        </div>
-                                                                                    </td>
+                                                        filteredTests.length > 0 ? (
+                                                            currentTests.map((test) => (
+                                                                <tr key={test.id} className="border-t hover:bg-gray-50 dark:hover:bg-gray-700">
+                                                                    {/* Test details */}
+                                                                    <td className="px-4 py-3">
+                                                                        <div className="font-semibold">{test.name}</div>
+                                                                        <div className="text-gray-500">
+                                                                            {test.courseName}
+                                                                        </div>
+                                                                    </td>
 
-                                                                                    {/* Topic */}
-                                                                                    <td className="px-4 py-3">
-                                                                                        {test.topicName}
-                                                                                    </td>
+                                                                    {/* Topic */}
+                                                                    <td className="px-4 py-3">
+                                                                        {test.topicName}
+                                                                    </td>
 
-                                                                                    {/* Score */}
-                                                                                    <td className="px-4 py-3">
-                                                                                        {test.marksScored} / {test.totalMarks}
-                                                                                    </td>
+                                                                    {/* Score */}
+                                                                    <td className="px-4 py-3">
+                                                                        {test.marksScored} / {test.totalMarks}
+                                                                    </td>
 
-                                                                                    {/* Time */}
-                                                                                    <td className="px-4 py-3">
-                                                                                        <span>{formatCustomDate(test.updatedAt)}</span>
-                                                                                    </td>
+                                                                    {/* Time */}
+                                                                    <td className="px-4 py-3">
+                                                                        <span>{formatCustomDate(test.updatedAt)}</span>
+                                                                    </td>
 
-                                                                                    {/* Status */}
-                                                                                    <td className="px-4 py-3 capitalize">
-                                                                                        <div className="flex">
-                                                                                            <div
-                                                                                                className={`px-2 py-1 rounded text-md font-medium ${test.testStatus === "completed"
-                                                                                                    ? "bg-green-100 text-green-600"
-                                                                                                    : test.testStatus === "in_progress"
-                                                                                                        ? "bg-yellow-100 text-yellow-600"
-                                                                                                        : "bg-gray-100 text-gray-500"
-                                                                                                    }`}
-                                                                                            >
-                                                                                                {test.testStatus.replace("_", " ")}
-                                                                                            </div>
-                                                                                        </div>
-                                                                                    </td>
+                                                                    {/* Status */}
+                                                                    <td className="px-4 py-3 capitalize">
+                                                                        <div className="flex">
+                                                                            <div
+                                                                                className={`px-2 py-1 rounded text-md font-medium ${test.testStatus === "completed"
+                                                                                    ? "bg-green-100 text-green-600"
+                                                                                    : test.testStatus === "in_progress"
+                                                                                        ? "bg-yellow-100 text-yellow-600"
+                                                                                        : "bg-gray-100 text-gray-500"
+                                                                                    }`}
+                                                                            >
+                                                                                {test.testStatus.replace("_", " ")}
+                                                                            </div>
+                                                                        </div>
+                                                                    </td>
 
-                                                                                    {/* Redirect */}
-                                                                                    <td className="px-4 py-3 text-blue-600">
-                                                                                        <Link to={`/student/user/course/test/${test.testId}`}>
-                                                                                            <Button className="rounded-full bg-green-400 hover:bg-green-500 text-black font-semibold px-4 py-1 text-sm sm:text-base">
-                                                                                                Checkout
-                                                                                            </Button>
-                                                                                        </Link>
-                                                                                    </td>
-                                                                                </tr>
-                                                                            ))
-                                                                        ) : (
-                                                                            <tr>
-                                                                                <td colSpan={6} className="text-center text-gray-500 py-6">
-                                                                                    No tests found matching your search.
-                                                                                </td>
-                                                                            </tr>
-                                                                        )
-                                                                    }
-                                                                </>
-                                                                :
-                                                                <tr>
-                                                                    <td colSpan={6} className="py-6 text-center text-gray-500">
-                                                                        You haven't attempted any test yet
+                                                                    {/* Redirect */}
+                                                                    <td className="px-4 py-3 text-blue-600">
+                                                                        <Link to={`/student/user/course/test/${test.testId}`}>
+                                                                            <Button className="rounded-full bg-green-400 hover:bg-green-500 text-black font-semibold px-4 py-1 text-sm sm:text-base">
+                                                                                Checkout
+                                                                            </Button>
+                                                                        </Link>
                                                                     </td>
                                                                 </tr>
+                                                            ))
+                                                        ) : (
+                                                            <tr>
+                                                                <td colSpan={6} className="text-center text-gray-500 py-6">
+                                                                    No tests found matching your search.
+                                                                </td>
+                                                            </tr>
+                                                        )
                                                     }
-                                                </tbody>
-                                            </table>
-                                        </div>
+                                                </>
+                                                :
+                                                <tr>
+                                                    <td colSpan={6} className="py-6 text-center text-gray-500">
+                                                        You haven't attempted any test yet
+                                                    </td>
+                                                </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
 
-                                        <div className="flex justify-between items-center">
+                        <div className="flex justify-between items-center">
 
-                                            <div className="flex justify-end mt-2">
-                                                <select
-                                                    value={testsPerPage}
-                                                    onChange={(e) => {
-                                                        setTestsPerPage(Number(e.target.value));
-                                                        setCurrentPage(1);
-                                                    }}
-                                                    className="border rounded px-3 py-1 text-sm"
-                                                >
-                                                    <option value={10}>10 per page</option>
-                                                    <option value={25}>25 per page</option>
-                                                    <option value={50}>50 per page</option>
-                                                </select>
-                                            </div>
+                            <div className="flex justify-end mt-2">
+                                <select
+                                    value={testsPerPage}
+                                    onChange={(e) => {
+                                        setTestsPerPage(Number(e.target.value));
+                                        setCurrentPage(1);
+                                    }}
+                                    className="border rounded px-3 py-1 text-sm"
+                                >
+                                    <option value={10}>10 per page</option>
+                                    <option value={25}>25 per page</option>
+                                    <option value={50}>50 per page</option>
+                                </select>
+                            </div>
 
 
-                                            <Pagination
-                                                currentPage={currentPage}
-                                                totalPages={Math.ceil(filteredTests.length / testsPerPage)}
-                                                onPageChange={(page) => setCurrentPage(page)}
-                                                maxVisible={3} // Adjust how many page numbers to show
-                                            />
+                            <Pagination
+                                currentPage={currentPage}
+                                totalPages={Math.ceil(filteredTests.length / testsPerPage)}
+                                onPageChange={(page) => setCurrentPage(page)}
+                                maxVisible={3} // Adjust how many page numbers to show
+                            />
 
-                                            <div className="text-sm text-gray-500">
-                                                Showing {Math.min(indexOfFirstTest + 1, filteredTests.length)} to {Math.min(indexOfLastTest, filteredTests.length)} out off {filteredTests.length} results
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </>
-                    }
-                </>
+                            <div className="text-sm text-gray-500">
+                                Showing {Math.min(indexOfFirstTest + 1, filteredTests.length)} to {Math.min(indexOfLastTest, filteredTests.length)} out off {filteredTests.length} results
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </DashboardLayout>
     )

@@ -18,7 +18,7 @@ import { CourseEnrollProvider } from './context/StudentCourseEnrollContext';
 import { StudentCoursesProvider } from './context/StudentCoursesContext';
 import TestHistory from './pages/Student/TestHistory';
 import { SingleCourseProvider } from './context/StudentSingleCourseContext';
-import { StudentTestHistoryProvider } from './context/studentTestHistory';
+import { StudentTestHistoryProvider } from './context/studentTestHistoryContext';
 import { TakeTestProvider } from './context/StudentTakeTestContext';
 
 const App: React.FC = () => {

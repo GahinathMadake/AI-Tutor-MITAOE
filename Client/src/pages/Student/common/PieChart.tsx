@@ -286,6 +286,9 @@ export const TestsAttempted: React.FC<{ data: MonthWiseTests[] }> = ({ data }) =
     desktop: item.tests,
   }));
 
+  const allZero = chartData.every(item => item.desktop === 0);
+
+
   const chartConfig = {
     desktop: {
       label: "Tests",
@@ -300,23 +303,36 @@ export const TestsAttempted: React.FC<{ data: MonthWiseTests[] }> = ({ data }) =
         <CardDescription>Monthly test count for last 1 Year</CardDescription>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={chartConfig}>
-          <BarChart accessibilityLayer data={chartData}>
-            <CartesianGrid vertical={false} />
-            <XAxis
-              dataKey="month"
-              tickLine={false}
-              tickMargin={10}
-              axisLine={false}
-              tickFormatter={(value) => value.slice(0, 3)}
-            />
-            <ChartTooltip
-              cursor={false}
-              content={<ChartTooltipContent hideLabel />}
-            />
-            <Bar dataKey="desktop" fill="var(--color-desktop)" radius={8} />
-          </BarChart>
-        </ChartContainer>
+        {allZero ? (
+          <div className="w-full h-[200px] flex items-center justify-center text-muted-foreground">
+            No tests attempted in the last 12 months
+          </div>
+        ) : (
+          <ChartContainer config={chartConfig}>
+            <BarChart accessibilityLayer data={chartData}>
+              <CartesianGrid vertical={false} />
+              <XAxis
+                dataKey="month"
+                tickLine={false}
+                tickMargin={10}
+                axisLine={false}
+                tickFormatter={(value) => value.slice(0, 3)}
+              />
+              <ChartTooltip
+                cursor={false}
+                content={<ChartTooltipContent hideLabel />}
+              />
+              <Bar dataKey="desktop" fill="var(--color-desktop)" radius={8} >
+                <LabelList
+                  dataKey="desktop"
+                  position="top"
+                  formatter={(value: number) => (value === 0 ? "0" : value)}
+                />
+              </Bar>
+
+            </BarChart>
+          </ChartContainer>
+        )}
       </CardContent>
       <CardFooter className="flex-col items-start gap-2 text-sm">
         <div className="text-muted-foreground leading-none">

@@ -1,6 +1,7 @@
 import { Response } from 'express';
 import { ApiResponse, AuthenticatedRequest } from '../types/auth';
 import { testService } from '../services/test.services';
+import { TestHistoryDashboardData } from '@/types/test';
 
 class StudentTestController {
 
@@ -12,8 +13,6 @@ class StudentTestController {
 
         const test = testData.data[0];
         test.testStatuses = testStatusData.data;
-
-        console.log(test);
 
         const response = {
             success: true,
@@ -270,19 +269,14 @@ class StudentTestController {
     async getTestHistoryDashboardData(req: AuthenticatedRequest, res: Response) {
         const user = req.user!;
 
-        const TestHistoryDashboardData = {
-            testAttempted: 10,
-            questionsSolved: 10,
-            coursesEnrolled: 10,
-            correctQuestions: 10,
-            wrongQuestions: 10,
-            unansweredQuestions: 10,
-            monthWiseTestAttempted: [],
-        }
+        const {testHistory, results} = await testService.getTestHistoryDashboardData(user.id);
+
+        const history:TestHistoryDashboardData  = testHistory.data[0];
+        history.monthWiseTestAttempted = results;
 
         const response: ApiResponse = {
             success: true,
-            data: { dashboard: TestHistoryDashboardData }
+            data: { dashboard:history}
         };
 
         res.status(200).json(response);
@@ -291,45 +285,13 @@ class StudentTestController {
     async getTestHistoryData(req: AuthenticatedRequest, res: Response) {
         const user = req.user!;
 
-        const testHistoryData = [
-            {
-                id: "1a2b3c4d",
-                testId: "TST1001",
-                name: "JavaScript Basics",
-                courseName: "Frontend Web Development",
-                topicName: "Variables and Data Types",
-                marksScored: 18,
-                totalMarks: 20,
-                testStatus: "Completed",
-                updatedAt: "2025-07-15T10:32:00Z",
-            },
-            {
-                id: "2b3c4d5e",
-                testId: "TST1002",
-                name: "Object-Oriented Programming",
-                courseName: "Core Java",
-                topicName: "Classes and Objects",
-                marksScored: 22,
-                totalMarks: 25,
-                testStatus: "Completed",
-                updatedAt: "2025-07-10T14:12:00Z",
-            },
-            {
-                id: "3c4d5e6f",
-                testId: "TST1003",
-                name: "Database Queries",
-                courseName: "Database Management Systems",
-                topicName: "SQL Joins",
-                marksScored: 15,
-                totalMarks: 25,
-                testStatus: "In Progress",
-                updatedAt: "2025-07-18T09:00:00Z",
-            }
-        ];
+        const { testHistory } = await testService.getTestHistoryData(user.id);
+
+        console.log(testHistory);
 
         const response: ApiResponse = {
             success: true,
-            data: { testHistory: testHistoryData }
+            data: { testHistory: testHistory.data }
         };
 
         res.status(200).json(response);

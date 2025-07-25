@@ -1,6 +1,8 @@
 import { dbService } from '../config/database';
 import { logger } from '../utils/logger';
 import { AppError } from '../errors/ApiError';
+import { MonthWiseTests } from '../types/test';
+import { startOfMonth, subMonths, format } from 'date-fns';
 
 export class TestService {
 
@@ -93,6 +95,120 @@ export class TestService {
     } catch (error: any) {
       logger.error('Failed to Fetch Test Basic-Details', { error: error.message, testId, userId });
       throw new AppError(error.message || 'Failed to Fetch Test Basic-Details', 500);
+    }
+  }
+
+  async getTestHistoryDashboardData(userId: string) {
+    try {
+      let query1 = `SELECT
+                      ts.testAttempted AS testAttempted,
+                      e.coursesEnrolled AS coursesEnrolled,
+                      s.questionsSolved AS questionsSolved,
+                      s.correctQuestions AS correctQuestions,
+                      s.wrongQuestions AS wrongQuestions,
+                      s.unansweredQuestions AS unansweredQuestions
+                    FROM
+                      (SELECT count() AS testAttempted FROM teststatus WHERE student_id = '${userId}' AND test_status = 'COMPLETED') AS ts,
+                      (SELECT count() AS coursesEnrolled FROM enrollment WHERE student_id = '${userId}' AND enrollment_status = 'ENROLLED') AS e,
+                      (SELECT
+                          count() AS questionsSolved,
+                          countIf(notEmpty(student_answer) AND marks_obtained > 0) AS correctQuestions,
+                          countIf(notEmpty(student_answer) AND marks_obtained = 0) AS wrongQuestions,
+                          countIf(empty(student_answer)) AS unansweredQuestions
+                        FROM testsubmission
+                        WHERE student_id = '${userId}'
+                      ) AS s`;
+
+      const testHistory = await dbService.executeQuery(query1);
+
+
+
+      const results: MonthWiseTests[] = [];
+
+      // Loop over last 12 months (oldest to current)
+      for (let i = 11; i >= 0; i--) {
+        const monthStart = startOfMonth(subMonths(new Date(), i));
+        const nextMonthStart = startOfMonth(subMonths(new Date(), i - 1));
+
+        const formattedMonth = format(monthStart, 'LLL');
+
+        const query = `
+          SELECT count(*) as tests
+          FROM teststatus
+          WHERE student_id = '${userId}'
+            AND test_status = 'COMPLETED'
+            AND updatedAt >= toDateTime('${monthStart.toISOString().slice(0, 19)}')
+            AND updatedAt < toDateTime('${nextMonthStart.toISOString().slice(0, 19)}')
+        `;
+
+        const row = await dbService.executeQuery(query);
+        const tests = Number(row.data.tests ?? 0);
+
+        results.push({
+          month: formattedMonth,
+          tests,
+        });
+      }
+
+      return {
+        testHistory,
+        results
+      };
+    } catch (error: any) {
+      logger.error('Failed to Fetch Test-History of user', { error: error.message, userId });
+      throw new AppError(error.message || 'Failed to Fetch Test-History of user', 500);
+    }
+  }
+
+
+  async getTestHistoryData(userId: string) {
+    try {
+      // let query1 = `SELECT
+      //                 tsb.test_submission_id AS id,
+      //                 t.test_id AS testId,
+      //                 t.test_name AS name,
+      //                 c.course_name AS courseName,
+      //                 tp.topic_name AS topicName,
+      //                 tsb.marks_obtained AS marksScored,
+      //                 t.total_marks AS totalMarks,
+      //                 tst.test_status AS testStatus,
+      //                 tst.updatedAt AS updatedAt
+
+      //               FROM testsubmission tsb
+      //               JOIN test t ON tsb.test_id = t.test_id
+      //               JOIN course c ON t.course_id = c.course_id
+      //               JOIN topic tp ON t.topic_id = tp.topic_id
+      //               LEFT JOIN teststatus tst ON tst.test_id = t.test_id AND tst.student_id = tsb.student_id
+
+      //               WHERE tsb.student_id = '${userId}'`;
+
+      let query1 = `SELECT
+                      tsb.test_submission_id AS id,
+                      t.test_id AS testId,
+                      t.test_name AS name,
+                      c.course_name AS courseName,
+                      tp.topic_name AS topicName,
+                      tsb.marks_obtained AS marksScored,
+                      t.total_marks AS totalMarks,
+                      tst.test_status AS testStatus,
+                      tst.updatedAt AS updatedAt
+
+                    FROM testsubmission tsb
+                    JOIN test t ON tsb.test_id = t.test_id
+                    JOIN course c ON t.course_id = c.course_id
+                    JOIN topic tp ON t.topic_id = tp.topic_id
+                    LEFT JOIN teststatus tst ON tst.test_status_id = t.test_id AND tst.student_id = tsb.student_id
+
+                    WHERE tsb.student_id = '${userId}'`;
+
+      const testHistory = await dbService.executeQuery(query1);
+
+      return {
+        testHistory,
+      };
+    } catch (error: any) {
+      logger.error('Failed to Fetch Test-History of user', { error: error.message, userId });
+      throw new AppError(error.message || 'Failed to Fetch Test-History of user', 500);
     }
   }
 
