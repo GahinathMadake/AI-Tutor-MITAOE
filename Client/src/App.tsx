@@ -20,6 +20,7 @@ import TestHistory from './pages/Student/TestHistory';
 import { SingleCourseProvider } from './context/StudentSingleCourseContext';
 import { StudentTestHistoryProvider } from './context/studentTestHistoryContext';
 import { TakeTestProvider } from './context/StudentTakeTestContext';
+import { StudentTestPageProvider } from './context/StudentTestPageContext';
 
 const App: React.FC = () => {
   return (
@@ -113,7 +114,9 @@ const App: React.FC = () => {
                             path="/exam/test/:testId/attempt"
                             element={
                               <ProtectedRoute>
-                                <TestPage />
+                                <StudentTestPageProvider>
+                                  <TestPage />
+                                </StudentTestPageProvider>
                               </ProtectedRoute>
                             }
                           />

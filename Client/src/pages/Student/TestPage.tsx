@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useImperativeHandle, forwardRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { useNavigate, useParams } from "react-router-dom";
@@ -15,7 +15,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import Webcam from "react-webcam";
-import { AlertTriangle, Ban, Loader2, Monitor, RotateCcwIcon, ScanEye, Lightbulb, GalleryVerticalEnd } from "lucide-react";
+import { AlertTriangle, Ban, Loader2, Monitor, RotateCcwIcon, ScanEye, Lightbulb, GalleryVerticalEnd, CheckCircleIcon } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
 import { API_BASE } from "@/utils/api";
@@ -35,7 +35,8 @@ import { Input } from '@/components/ui/input';
 import { AlertDialogCancel } from "@radix-ui/react-alert-dialog";
 import WorqHat from "./assets/WorqHat.png";
 import College_logo from "@/assets/logo_MITAOE.jpg";
-import type { Question, TestType } from "@/types/studentTestPage";
+import type { Question } from "@/types/studentTestPage";
+import { useStudentTestPage } from "@/hooks/useStudentTestPage";
 
 
 
@@ -46,7 +47,6 @@ import type { Question, TestType } from "@/types/studentTestPage";
 interface WebcamCaptureProps {
   className?: string;
   submitTestHandller: () => void;
-  setCheatingReason: React.Dispatch<React.SetStateAction<string>>;
   setOpenDialog: React.Dispatch<React.SetStateAction<boolean>>;
   setOpenDialogWarning: React.Dispatch<React.SetStateAction<string>>;
 }
@@ -54,13 +54,13 @@ interface WebcamCaptureProps {
 export const WebcamCapture: React.FC<WebcamCaptureProps> = ({
   className = "",
   submitTestHandller,
-  setCheatingReason,
   setOpenDialog,
   setOpenDialogWarning
 }) => {
   const webcamRef = useRef<Webcam | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const { token } = useAuth();
+  const { setCheatingReason } = useStudentTestPage();
 
   // Proctoring
   const violationCountRef = useRef<number>(0);
@@ -90,7 +90,7 @@ export const WebcamCapture: React.FC<WebcamCaptureProps> = ({
 
       const result = await response.json();
 
-      if(result.data.success){
+      if (result.data.success) {
         const numberOfPeople = result?.data?.numberOfPeople;
 
         if (numberOfPeople !== 1) {
@@ -205,7 +205,7 @@ export const RemainingTime: React.FC<RemainingTimeProps> = ({ duration, submitTe
 
 
 
-interface QuestionComponentProps{
+interface QuestionComponentProps {
   question?: Question;
   currentQuestion: number;
   answersOfQuestions: { [key: string]: { answer: string; hints: number[]; } };
@@ -255,7 +255,6 @@ export const Questioncompo: React.FC<QuestionComponentProps> = ({
   const handleOptionSelect = (selectedOption: string) => {
     if (question) {
 
-      console.log(selectedOption);
       const questionId = question.id;
 
       // Update selected answer
@@ -419,59 +418,93 @@ export const Questioncompo: React.FC<QuestionComponentProps> = ({
 
 const TestPage: React.FC = () => {
   const { testId } = useParams();
-  const { user, token } = useAuth();
   const navigate = useNavigate();
 
-  const [Test, setTest] = useState<TestType>();
-  const [Loading, setIsLoading] = useState<boolean>(true);
+  const { Test, fetchTestData, startTestHandller, submitTestHandller, setCheatingReason } = useStudentTestPage();
+
+  const [Loading, setIsLoading] = useState<boolean>(true);  // Loding Test Details
   const [message, setMessage] = useState<string>("");
   const [startingTest, setStartingTest] = useState<boolean>(false);
   const [testStarted, setTestStarted] = useState<boolean>(false);
 
 
-  const [answersOfQuestions, setAnswersOfQuestions] = useState<{
-    [key: string]: {
-      answer: string;
-      hints: number[];
+  const loadTestData = async (testId: string) => {
+    setIsLoading(true);
+    const { success, message } = await fetchTestData(testId);
+
+    if (!success) {
+      setMessage(message);
     }
-  }>({});
+    setIsLoading(false);
+  };
 
-  const [statusOfQuestion, setStatusOfQuestion] = useState<{ [key: string]: number }>({});
+  // Load the Data if initial requirements satisfied
+  useEffect(() => {
+    if (!testId) {
+      return;
+    }
 
+    loadTestData(testId);
+  }, [testId]);
 
-  // Taking function from chgild
-  const testPageRef = useRef<MainTestPageRef>(null);
+  // Start Test Handler
+  const startTest = async (testId: string) => {
+    setStartingTest(true);
+    const { success, message } = await startTestHandller(testId);
 
-  const forceSubmitTest = () => {
-    testPageRef.current?.submitTestHandller();
+    if (success) {
+      setTestStarted(true);
+    }
+    else {
+      alert(message);
+    }
+    setStartingTest(false);
+  };
+
+  const [isSubmitted, setIsSubmitted] = useState<boolean>(false);
+  const [submittedTest, setSubmittedTest] = useState<boolean>(false);
+
+  // Submit Handller
+  const submitTest = async () => {
+    if (submittedTest) return;
+    if (isSubmitted) return;
+    setIsSubmitted(true);
+
+    const { success, message } = await submitTestHandller(testId as string);
+
+    if (success) {
+      setSubmittedTest(true);
+    }
+    else {
+      alert(message);
+    }
+    setIsSubmitted(false);
   };
 
 
 
-  {/* 
-    Guide for Status of Questions
-    1   ===>    Answered
-    2   ===> Marked for review
-    3   ===> Unanswered
-    4   ===> unvisited
-    */}
+
+  // ---------------------------------------------- Proctoring Of Test -------------------------------------------------
+  const [openDialog, setOpenDialog] = useState<boolean>(false);
+  const [openDialogWarning, setOpenDialogWarning] = useState<string>("");
+
 
   const testStartedRef = useRef(false);
   useEffect(() => {
     testStartedRef.current = testStarted;
   }, [testStarted]);
 
+  const submittedTestRef = useRef(false);
+  useEffect(() => {
+    submittedTestRef.current = submittedTest;
+  }, [submittedTest]);
 
-
-  // Check for the initial requirments
-  const hasRunRef = useRef(false);
 
   const checkCameraPermissions = async () => {
     try {
       const permissionStatus = await navigator.permissions.query({ name: 'camera' as any });
       if (permissionStatus.state === 'granted') return true;
 
-      // Fallback for browsers that don't support permissions API
       const stream = await navigator.mediaDevices.getUserMedia({ video: true });
       stream.getTracks().forEach(track => track.stop());
       return true;
@@ -479,37 +512,6 @@ const TestPage: React.FC = () => {
       return false;
     }
   };
-
-  const checkFullscreen = () => {
-    return !!document.fullscreenElement || window.innerHeight === screen.height;
-  };
-
-  useEffect(() => {
-    if (hasRunRef.current) return;
-    hasRunRef.current = true;
-
-    const checkRequirements = async () => {
-      const hasCameraAccess = await checkCameraPermissions();
-      const isFullscreen = checkFullscreen();
-
-      if (!hasCameraAccess || !isFullscreen) {
-        alert("Test Requirements not Fullfilled!");
-        navigate(`/exam/test/${testId}`);
-      }
-    };
-
-    checkRequirements();
-  }, [testId, navigate]);
-
-
-
-
-  // ---------------------------------------------- Proctoring Of Test -------------------------------------------------
-  const [fullScreen, setFullScreen] = useState<boolean>(true);
-  const [cheatingReason, setCheatingReason] = useState<string>('');
-
-  const [openDialog, setOpenDialog] = useState<boolean>(false);
-  const [openDialogWarning, setOpenDialogWarning] = useState<string>("");
 
   const requestFullscreenMode = async () => {
     try {
@@ -541,16 +543,41 @@ const TestPage: React.FC = () => {
     }
   };
 
+  const checkFullscreen = () => {
+    return !!document.fullscreenElement || window.innerHeight === screen.height;
+  };
+
+  // Check for the initial requirments
+  const hasRunRef = useRef(false); // Want to run useEffect for Once
+  useEffect(() => {
+    if (hasRunRef.current) return;
+    hasRunRef.current = true;
+
+    const checkRequirements = async () => {
+      const hasCameraAccess = await checkCameraPermissions();
+      const isFullscreen = await checkFullscreen();
+
+      if (!hasCameraAccess || !isFullscreen) {
+        alert("Test Requirements not Fullfilled!");
+        navigate(`/exam/test/${testId}`);
+      }
+    };
+
+    checkRequirements();
+  }, [testId, navigate]);
+
 
   const fullscreenCountRef = useRef(0);
   const handleFullscreenChange = () => {
-    const stillFullscreen = checkFullscreen();
+    if (submittedTestRef.current) return;
 
-    console.log("FullScreen out Cout", fullscreenCountRef.current);
+    const stillFullscreen = checkFullscreen();
 
     if (!testStartedRef.current && !stillFullscreen) {
       setOpenDialogWarning("We noticed that you exist from fullScreen! Please Follow the instruction")
-      setOpenDialog(true);
+      setTimeout(() => {
+        setOpenDialog(true);
+      }, 200);
       return;
     }
 
@@ -559,18 +586,19 @@ const TestPage: React.FC = () => {
 
       if (fullscreenCountRef.current === 1) {
         setOpenDialogWarning("We detected you exited fullscreen mode, Please do not do this again. One more exit will submit your test.");
-        setOpenDialog(true);
-        setFullScreen(false);
+        setTimeout(() => {
+          setOpenDialog(true);
+        }, 200);
       }
       else if (fullscreenCountRef.current >= 2) {
         setOpenDialogWarning("You exited fullscreen again. Your test will be submitting your test!");
-        setOpenDialog(true);
-        setFullScreen(false);
-        setCheatingReason("Test auto-submitted due to multiple exits from fullscreen mode during proctored session.")
-
-        console.log("Submitted");
         setTimeout(() => {
-          forceSubmitTest();
+          setOpenDialog(true);
+        }, 200);
+
+        setCheatingReason("Test auto-submitted due to multiple exits from fullscreen mode during proctored session.")
+        setTimeout(() => {
+          submitTest();
         }, 2000);
       }
     }
@@ -578,11 +606,13 @@ const TestPage: React.FC = () => {
 
   const tabChangeCountRef = useRef(0);
   const handleVisibilityChange = () => {
-    console.log("Tab change Cout", tabChangeCountRef.current);
+    if (submittedTestRef.current) return;
 
     if (!testStartedRef.current && document.hidden) {
       setOpenDialogWarning("We noticed that you changed the tab! Please follow the instructions.");
-      setOpenDialog(true);
+      setTimeout(() => {
+        setOpenDialog(true);
+      }, 200);
       return;
     }
 
@@ -591,21 +621,23 @@ const TestPage: React.FC = () => {
 
       if (tabChangeCountRef.current === 1) {
         setOpenDialogWarning("We noticed that you changed tab. Please do not do this again. If it happens once more, your test will be submitted automatically.");
-        setOpenDialog(true);
+        setTimeout(() => {
+          setOpenDialog(true);
+        }, 200);
       }
       else if (tabChangeCountRef.current >= 2) {
         setOpenDialogWarning("You switched tabs again after the warning. We are regretfully informing you that we will submiting your test");
-        setOpenDialog(true);
+        setTimeout(() => {
+          setOpenDialog(true);
+        }, 200);
       }
     }
     else {
       if (tabChangeCountRef.current >= 2) {
         setCheatingReason("Test auto-submitted after multiple tab switches during the proctored session.");
-        console.log("Submitted");
         setTimeout(() => {
-          forceSubmitTest();
+          submitTest();
         }, 2000);
-
       }
     }
   }
@@ -624,130 +656,6 @@ const TestPage: React.FC = () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [testStarted]);
-
-
-  const fetchTestData = async (testId: string, userId: string, token: string) => {
-    if (!testId || !userId || !token) {
-      alert("Information are not sufficient! Please try again later or contact support.");
-      return;
-    }
-
-    setIsLoading(true);
-
-    try {
-      const storageKey = `test_${testId}_user_${userId}`;
-
-      const cachedTest = localStorage.getItem(storageKey);
-      if (cachedTest && cachedTest !== "undefined") {
-        try {
-          const parsed = JSON.parse(cachedTest);
-          setTest(parsed);
-          setTimeout(() => setIsLoading(false), 500);
-          return;
-        } catch (err) {
-          console.warn("Invalid cached test data, removing from localStorage...");
-          localStorage.removeItem(storageKey);
-        }
-      }
-
-      // Fetch from server
-      const response = await fetch(
-        `${API_BASE}/student/test/get-test?testId=${testId}`,
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      const result = await response.json();
-      console.log("Test Fetch Result:", result);
-
-      if (result.success) {
-        setTest(result.data.test);
-        localStorage.setItem(storageKey, JSON.stringify(result.data.test));
-      } else {
-        console.error("API error:", result.message || result.error);
-        setMessage(result.message || "Failed to fetch test details");
-      }
-    } catch (error) {
-      console.error("Unexpected error:", error);
-      setMessage("An unexpected error occurred.");
-    } finally {
-      setTimeout(() => setIsLoading(false), 500);
-    }
-  };
-
-
-  // Load the Data if initial requirements satisfied
-  useEffect(() => {
-
-    if (user === null || token === null) {
-      return;
-    }
-
-    fetchTestData(testId as string, user.id, token as string);
-
-  }, [testId, user, token]);
-
-
-
-  // Start Test Handler
-  const startTest = async (testId: string, userId: string, token: string) => {
-    if (startingTest) return;
-    setStartingTest(true);
-
-    if (!testId || !userId || !token) {
-      alert("Test ID, User ID, and token are required.");
-      setStartingTest(false);
-      return;
-    }
-
-    try {
-      const response = await fetch(
-        `${API_BASE}/student/test/start-test?testId=${testId}`,
-        {
-          method: "PATCH",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      const result = await response.json();
-      console.log("Start Test Response:", result);
-
-      if (response.ok && result.success) {
-        const initialAnswers: {
-          [key: string]: { answer: string; hints: number[] };
-        } = {};
-
-        const initialStatus: { [key: string]: number } = {};
-
-        if (Test?.testQuestions) {
-          Test.testQuestions.forEach((testQuestion) => {
-            const qId = testQuestion.question.id;
-            initialAnswers[qId] = { answer: "", hints: [] };
-            initialStatus[qId] = 4;
-          });
-
-          setAnswersOfQuestions(initialAnswers);
-          setStatusOfQuestion(initialStatus);
-          setTestStarted(true);
-        } else {
-          alert("Test questions not found.");
-        }
-      } else {
-        alert(result.message || "Failed to start the test. Please try again later.");
-      }
-    } catch (error) {
-      console.error("Unexpected error:", error);
-      alert("An unexpected error occurred. Please try again later.");
-    } finally {
-      setStartingTest(false);
-    }
-  };
 
 
   if (Loading) {
@@ -803,9 +711,8 @@ const TestPage: React.FC = () => {
           <AlertDialogFooter>
             {/* <AlertDialogCancel>Cancel</AlertDialogCancel> */}
             <AlertDialogAction onClick={() => {
-              if (!fullScreen) {
+              if (!checkFullscreen() && !submittedTest) {
                 requestFullscreenMode();
-                setFullScreen(false);
               }
             }}>Continue</AlertDialogAction>
           </AlertDialogFooter>
@@ -814,16 +721,11 @@ const TestPage: React.FC = () => {
       {
         testStarted ?
           <MainTestPage
-            ref={testPageRef}
-            Test={Test}
-            answersOfQuestions={answersOfQuestions}
-            setAnswersOfQuestions={setAnswersOfQuestions}
-            statusOfQuestion={statusOfQuestion}
-            setStatusOfQuestion={setStatusOfQuestion}
-            cheatingReason={cheatingReason}
-            setCheatingReason={setCheatingReason}
             setOpenDialog={setOpenDialog}
             setOpenDialogWarning={setOpenDialogWarning}
+            isSubmitted={isSubmitted}
+            submittedTest={submittedTest}
+            submitTest={submitTest}
           />
           :
           <div className="max-w-xl mx-auto p-6 text-center space-y-6 bg-background border rounded-xl shadow-lg mt-10">
@@ -851,7 +753,20 @@ const TestPage: React.FC = () => {
               </div>
             </div>
 
-            <Button onClick={() => startTest(testId as string, user?.id as string, token as string)} disabled={startingTest} className="w-full text-lg gap-2">
+            <Button
+              onClick={() => {
+                if (!document.fullscreenElement) {
+                  setOpenDialogWarning("Please switch to fullscreen mode to start the test.");
+                  setTimeout(() => {
+                    setOpenDialog(true);
+                  }, 200);
+                } else {
+                  startTest(testId as string);
+                }
+              }
+              }
+              disabled={startingTest}
+              className="w-full text-lg gap-2">
               {startingTest ? "Starting..." : "Start Test"}
             </Button>
           </div>
@@ -861,104 +776,25 @@ const TestPage: React.FC = () => {
 };
 
 
-// MainTestPageRef.ts
-interface MainTestPageRef {
-  submitTestHandller: () => Promise<void>;
-}
-
 interface MainTestPageProps {
-  Test: TestType;
-  answersOfQuestions: { [key: string]: { answer: string; hints: number[]; } };
-  setAnswersOfQuestions: React.Dispatch<React.SetStateAction<{ [key: string]: { answer: string; hints: number[]; } }>>;
-  statusOfQuestion: { [key: string]: number };
-  setStatusOfQuestion: React.Dispatch<React.SetStateAction<{ [key: string]: number }>>;
-  cheatingReason: string;
-  setCheatingReason: React.Dispatch<React.SetStateAction<string>>;
   setOpenDialog: React.Dispatch<React.SetStateAction<boolean>>;
   setOpenDialogWarning: React.Dispatch<React.SetStateAction<string>>;
+  isSubmitted: boolean;
+  submittedTest: boolean;
+  submitTest: () => void;
 }
 
-const MainTestPage = forwardRef<MainTestPageRef, MainTestPageProps>(({
-  Test,
-  answersOfQuestions,
-  setAnswersOfQuestions,
-  statusOfQuestion,
-  setStatusOfQuestion,
-  cheatingReason,
+const MainTestPage: React.FC<MainTestPageProps> = ({
   setOpenDialogWarning,
   setOpenDialog,
-  setCheatingReason
-}, ref) => {
-  const { testId } = useParams();
-  const { user, token } = useAuth();
-  const navigate = useNavigate();
-
+  isSubmitted,
+  submittedTest,
+  submitTest
+}) => {
   const [currentQuestion, setCurrentQuestion] = useState<number>(1);
-  const [isSubmitted, setIsSubmitted] = useState<boolean>(false);
-  const [submittedTest, setSubmittedTest] = useState<boolean>(false);
-
-
-  // Submit Handller
-  const submitTestHandller = async () => {
-    if (isSubmitted) return;
-    setIsSubmitted(true);
-
-    const testIdValue = testId as string;
-    const userId = user?.id as string;
-    const courseId = Test?.course?.id as string;
-
-    if (!testIdValue || !userId || !token || !courseId) {
-      alert("Missing required fields.");
-      setIsSubmitted(false);
-      return;
-    }
-
-    try {
-      const response = await fetch(
-        `${API_BASE}/student/test/submit-test`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            answersOfQuestions,
-            testId: testIdValue,
-            courseId,
-            cheatingReason,
-          }),
-        }
-      );
-
-      const result = await response.json();
-
-      if (response.ok && result.success) {
-        setSubmittedTest(true);
-
-        const storageKey = `test_${testIdValue}_user_${userId}`;
-        localStorage.removeItem(storageKey);
-
-        alert("Your test was submitted successfully!");
-        navigate(`/student/user/course/test/${testIdValue}`);
-      } else {
-        console.warn("Submission failed:", result.message || "Unknown error");
-        alert(result.message || "Failed to submit test.");
-      }
-    } catch (error) {
-      console.error("An error occurred during submission:", error);
-      alert("Unexpected error occurred. Please try again.");
-    } finally {
-      setIsSubmitted(false);
-    }
-  };
-
-
-  // Expose submit handller to parent
-  useImperativeHandle(ref, () => ({
-    submitTestHandller,
-  }));
-
+  const navigate = useNavigate();
+  const {testId} = useParams();
+  const { Test, statusOfQuestion, setStatusOfQuestion, answersOfQuestions, setAnswersOfQuestions } = useStudentTestPage();
 
   // Include into Marked for review
   function handleMarkForReview(questionId: string) {
@@ -1006,11 +842,22 @@ const MainTestPage = forwardRef<MainTestPageRef, MainTestPageProps>(({
   }
 
   if (submittedTest) {
-    return <div>Test was submitted now</div>
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-6">
+        <CheckCircleIcon className="w-16 h-16 text-green-500 mb-4" />
+        <h2 className="text-3xl font-semibold text-gray-800 mb-2">Test Submitted Successfully</h2>
+        <p className="text-gray-600 mb-6">Your test has been submitted. You can now view your results or return to the test overview page.</p>
+        <Button
+          onClick={() => navigate(`/student/user/course/test/${testId}`)}
+          className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-5 rounded-lg shadow"
+        >
+          Go to Test Overview
+        </Button>
+      </div>
+    )
   }
 
   return (
-
     <div className="h-screen flex flex-col">
 
       {/* Sticky Header */}
@@ -1115,7 +962,7 @@ const MainTestPage = forwardRef<MainTestPageRef, MainTestPageProps>(({
               Test.testQuestions?.length === currentQuestion &&
               <Button
                 className={`rounded-full ${isSubmitted ? "bg-[#666] hover:bg-[#666]" : ""}`}
-                onClick={submitTestHandller}
+                onClick={submitTest}
               >
                 Submit
               </Button>
@@ -1128,7 +975,7 @@ const MainTestPage = forwardRef<MainTestPageRef, MainTestPageProps>(({
         <div className="col-span-2 bg-sidebar h-full overflow-hidden" style={{ height: "calc(100vh - 50px)" }}>
           <ScrollArea className="w-full h-full">
             {/* Timer */}
-            <RemainingTime duration={Test.duration * 1000} submitTestHandller={submitTestHandller} />
+            <RemainingTime duration={Test.duration * 1000} submitTestHandller={submitTest} />
 
             <Separator />
 
@@ -1209,10 +1056,9 @@ const MainTestPage = forwardRef<MainTestPageRef, MainTestPageProps>(({
               </h2>
 
               <WebcamCapture
-                setCheatingReason={setCheatingReason}
                 setOpenDialog={setOpenDialog}
                 setOpenDialogWarning={setOpenDialogWarning}
-                submitTestHandller={submitTestHandller}
+                submitTestHandller={submitTest}
               />
             </div>
           </ScrollArea>
@@ -1222,7 +1068,7 @@ const MainTestPage = forwardRef<MainTestPageRef, MainTestPageProps>(({
 
     </div>
   );
-});
+};
 
 
 

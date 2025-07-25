@@ -62,10 +62,8 @@ export const StudentTestHistoryProvider: React.FC<{ children: React.ReactNode }>
   };
 
   async function refreshData(){
-    console.log("Function Called");
     await fetchTestHistoryDashboardData();
     await fetchTestHistory();
-    console.log("Function Executed");
   };
 
   useEffect(() => {
