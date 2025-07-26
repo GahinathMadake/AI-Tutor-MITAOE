@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { studentTestController } from '../../controllers/test.controller';
 import { authenticateToken } from '../../middleware/auth.middleware';
 import { asyncHandler } from '../../errors/errorHandler';
+import multer from 'multer';
 
 const router = Router();
 
@@ -32,8 +33,14 @@ router.post(
   asyncHandler(studentTestController.submitTest)
 );
 
+
+// Proctoring of test
+const upload = multer({
+  storage: multer.memoryStorage(), // Keeps file in memory
+});
+
 router.post(
-  '/analyse-image',
+  '/analyse-image', upload.single('image'),
   asyncHandler(studentTestController.analyseImage)
 );
 

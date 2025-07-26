@@ -15,7 +15,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import Webcam from "react-webcam";
-import { AlertTriangle, Ban, Loader2, Monitor, RotateCcwIcon, ScanEye, Lightbulb, GalleryVerticalEnd, CheckCircleIcon } from "lucide-react";
+import { AlertTriangle, Ban, Loader2, Monitor, RotateCcwIcon, ScanEye, Lightbulb, GalleryVerticalEnd, CheckCircleIcon, Play, ChevronRight } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
 import { API_BASE } from "@/utils/api";
@@ -33,9 +33,10 @@ import {
 } from "@/components/ui/hover-card";
 import { Input } from '@/components/ui/input';
 import { AlertDialogCancel } from "@radix-ui/react-alert-dialog";
+import Editor from "@monaco-editor/react";
 import WorqHat from "./assets/WorqHat.png";
 import College_logo from "@/assets/logo_MITAOE.jpg";
-import type { Question } from "@/types/studentTestPage";
+import { EditorTheme, LanguageEnum, type Question } from "@/types/studentTestPage";
 import { useStudentTestPage } from "@/hooks/useStudentTestPage";
 
 
@@ -87,8 +88,8 @@ export const WebcamCapture: React.FC<WebcamCaptureProps> = ({
         body: formData,
       });
 
-
       const result = await response.json();
+      console.log("In try = ", result);
 
       if (result.data.success) {
         const numberOfPeople = result?.data?.numberOfPeople;
@@ -116,6 +117,7 @@ export const WebcamCapture: React.FC<WebcamCaptureProps> = ({
       }
 
     } catch (error) {
+      console.log("In Catch Block = ");
       console.error("Error analyzing webcam image:", error);
     }
   };
@@ -147,9 +149,6 @@ export const WebcamCapture: React.FC<WebcamCaptureProps> = ({
     </div>
   );
 };
-
-
-
 
 
 
@@ -202,31 +201,308 @@ export const RemainingTime: React.FC<RemainingTimeProps> = ({ duration, submitTe
 
 
 
+type CodingQuestionProps = {
+  question: Question;
+}
+
+interface TestCaseDisplay {
+  input: string;
+  expected_output: string
+  default: boolean;
+}
+
+
+export const CodingQuestion: React.FC<CodingQuestionProps> = ({ question }) => {
+  const { answersOfQuestions, setAnswersOfQuestions } = useStudentTestPage();
+
+  const [language, setLanguage] = useState<LanguageEnum>(LanguageEnum.C);
+  const [theme, setTheme] = useState<EditorTheme>(EditorTheme.LIGHT);
+  const [loading, setLoading] = useState<boolean>(false);
+
+
+  const handleRunCode = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/run-code", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ language: "javascript" }),
+      });
+
+      const data = await res.json();
+      setOutput(data.output || "No output");
+    } catch (err) {
+      setOutput("Error running code");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
+  //  OutPUT Tabs Setting
+  const [output, setOutput] = useState<string>("");
+  const [activeTab, setActiveTab] = useState<'testcases' | 'result'>('testcases');
+  const [testCases, setTestCases] = useState<TestCaseDisplay[]>([]);
+  const [activeCase, setActiveCase] = useState(0);
+  
+  useEffect(()=>{
+    setActiveCase(0);
+    setActiveTab('testcases');
+    setLoading(false);
+  }, [question]);
+
+  useEffect(() => {
+    if (question?.testCases?.length) {
+      const visibleTestCases = question.testCases.filter(tc => !tc.hidden);
+
+      const initialized = visibleTestCases.map((tc) => ({
+        input: tc.input,
+        expected_output: tc.expected_output,
+        default: false, 
+      }));
+
+      setTestCases(initialized);
+    }
+  }, [question]);
+
+  const addTestCaseHandler = () => {
+    setTestCases((prev) => {
+      const baseCase = prev && prev.length > 0 ? prev[0] : { input: "", expected_output: "", default: false };
+      const newCase: TestCaseDisplay = {
+        input: baseCase.input,
+        expected_output: baseCase.expected_output,
+        default: true,
+      };
+
+      return [...(prev || []), newCase];
+    });
+  };
+
+
+  return (
+    <div className="mt-6">
+
+      <h2 className="text-xl font-semibold mb-2">Write Your Code</h2>
+      <div className="rounded-md border bg-gray-100">
+
+        <div className="flex justify-between p-2 mb-1">
+          <div className="">
+            <Button
+              className="bg-blue-600 text-white rounded"
+              onClick={handleRunCode}
+              disabled={loading}
+            >
+              <Play /> {loading ? "Running..." : "Run"}
+            </Button>
+          </div>
+
+          <div className="flex gap-4 items-center justify-center">
+            <select
+              className="border px-2 py-1 rounded"
+              value={language}
+              onChange={(e) => setLanguage(e.target.value as LanguageEnum)}
+            >
+              {Object.values(LanguageEnum).map((lang) => (
+                <option key={lang} value={lang}>
+                  {lang.toUpperCase()}
+                </option>
+              ))}
+            </select>
+
+            <select
+              className="border px-2 py-1 rounded"
+              value={theme}
+              onChange={(e) => setTheme(e.target.value as EditorTheme)}
+            >
+              {Object.values(EditorTheme).map((t) => (
+                <option key={t} value={t}>
+                  {t === "vs" ? "Light" : t === "vs-dark" ? "Dark" : "High Contrast"}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <Editor
+          height="400px"
+          defaultLanguage={language}
+          defaultValue={answersOfQuestions[question.id].answer}
+          value={answersOfQuestions[question.id].answer}
+          theme={theme}
+          onChange={
+            (val: string | undefined) => {
+              const updatedAnswer = val || "";
+
+              setAnswersOfQuestions((prev) => ({
+                ...prev,
+                [question.id]: {
+                  ...prev[question.id],
+                  answer: updatedAnswer,
+                },
+              }));
+            }
+          }
+          options={{
+            minimap: { enabled: false },
+            fontSize: 14,
+            scrollBeyondLastLine: false,
+            automaticLayout: true,
+          }}
+          className="border-t border-b"
+        />
+
+        <div className="mt-1 p-2 max-h-[300px] overflow-auto">
+          <div className="flex items-center  border-b pb-2">
+            <div
+              onClick={() => setActiveTab('testcases')}
+              className={`cursor-pointer px-4 py-2 rounded-md text-sm font-medium ${activeTab === 'testcases' ? 'bg-gray-200' : 'text-gray-600 hover:bg-gray-200'}`}
+            >
+              TestCases
+            </div>
+
+            <hr className="mx-1 w-px h-5 bg-gray-300 border-0" />
+
+            <div
+              onClick={() => setActiveTab('result')}
+              className={`cursor-pointer px-4 py-2 rounded-md flex items-center space-x-1 text-sm font-medium ${activeTab === 'result' ? 'bg-gray-200' : 'text-gray-600 hover:bg-gray-200'}`}
+            >
+              <ChevronRight size={16} />
+              <span>Result</span>
+            </div>
+          </div>
+
+          {
+            activeTab === 'testcases' ? (
+              <div className="space-y-2 mt-2">
+
+                <div className="flex space-x-2 mb-4">
+                  {
+                    testCases.map((testCase, index) => (
+                      <div key={index} className="relative group">
+                        <button
+                          key={index}
+                          onClick={() => setActiveCase(index)}
+                          className={`px-4 py-1 rounded-md font-medium pr-6 ${activeCase === index ? "bg-gray-200" : "hover:bg-gray-200"}`}
+                        >
+                          Case {index + 1}
+                        </button>
+
+
+                        {testCase.default && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (activeCase+1==testCases.length) setActiveCase((prev) => prev - 1);
+                              setTestCases((prev) => prev.filter((_, i) => i !== index));
+                            }}
+                            className="absolute top-[-6px] right-[-6px] bg-gray-600 text-white rounded-full w-4 h-4 text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                            title="Delete"
+                          >
+                            ×
+                          </button>
+                        )}
+
+                      </div>
+                    ))
+                  }
+
+                  {
+                    (!testCases || testCases.length <= 8) &&
+                    <button
+                      className="p-2 rounded-full hover:bg-gray-200"
+                      onClick={addTestCaseHandler}
+                    >
+                      +
+                    </button>
+                  }
+                </div>
+
+                <div className="text-sm space-y-4">
+                  <div className="space-y-2 p-4 rounded-lg">
+                    <div className="space-y-1">
+                      <p className="font-medium">Input:</p>
+                      <Input
+                        type="text"
+                        value={
+                          activeCase >= 0 && activeCase < testCases.length
+                            ? testCases[activeCase].input
+                            : ''
+                        }
+                        onChange={(e) => {
+                          const updated = [...testCases];
+                          if (activeCase >= 0 && activeCase < updated.length) {
+                            updated[activeCase] = {
+                              ...updated[activeCase],
+                              input: e.target.value,
+                            };
+                            setTestCases(updated);
+                          }
+                        }}
+                        className="bg-gray-300 px-2 py-1 rounded w-full"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <p className="font-medium">Expected Output:</p>
+                      <Input
+                        type="text"
+                        value={
+                          activeCase >= 0 && activeCase < testCases.length
+                            ? testCases[activeCase].expected_output
+                            : ''
+                        }
+                        onChange={(e) => {
+                          const updated = [...testCases];
+                          if (activeCase >= 0 && activeCase < updated.length) {
+                            updated[activeCase] = {
+                              ...updated[activeCase],
+                              expected_output: e.target.value,
+                            };
+                            setTestCases(updated);
+                          }
+                        }}
+                        className="bg-gray-300 px-2 py-1 rounded w-full"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="mt-2 p-3 border rounded-md text-sm whitespace-pre-wrap">
+                {output.trim() === "" ? (
+                  <p className="text-gray-500">⚠️ You must run your code first to see the output.</p>
+                ) : (
+                  <pre className="whitespace-pre-wrap text-gray-800">{output}</pre>
+                )}
+              </div>
+            )
+          }
+        </div>
+      </div>
+    </div>
+  );
+}
+
 
 
 
 interface QuestionComponentProps {
   question?: Question;
   currentQuestion: number;
-  answersOfQuestions: { [key: string]: { answer: string; hints: number[]; } };
-  setAnswersOfQuestions: React.Dispatch<React.SetStateAction<{ [key: string]: { answer: string; hints: number[]; } }>>;
-  statusOfQuestion: { [key: string]: number };
-  setStatusOfQuestion: React.Dispatch<React.SetStateAction<{ [key: string]: number }>>;
 }
 
 export const Questioncompo: React.FC<QuestionComponentProps> = ({
   question,
   currentQuestion,
-  answersOfQuestions,
-  setAnswersOfQuestions,
-  statusOfQuestion,
-  setStatusOfQuestion
 }) => {
 
   if (!question) {
     return;
   }
 
+  const { answersOfQuestions, setAnswersOfQuestions, statusOfQuestion, setStatusOfQuestion } = useStudentTestPage()
   const [useHints, setUseHints] = useState<boolean>(false);
   const [openHints, setOpenHints] = useState<boolean[]>([]);
 
@@ -339,12 +615,48 @@ export const Questioncompo: React.FC<QuestionComponentProps> = ({
                   ))}
                 </RadioGroup>
                 :
-
                 // CodeEditor Implementation
-                <div>
+                <div className="mt-6">
+                  {/* Test cases */}
+                  <div>
+                    <h2 className="text-xl font-semibold mb-4">Sample Test Cases:</h2>
 
+                    {
+                      !question.testCases || question.testCases.length === 0
+                        ?
+                        (<p className="py-2 text-sm text-gray-500">No test cases available.</p>)
+                        :
+                        (<div className="space-y-6">
+                          {question.testCases.map((testCase, index) => (
+                            <div
+                              key={index}
+                              className="text-sm"
+                            >
+                              <h3 className="font-lg mb-1 font-semibold">
+                                Test Case {index + 1}
+                              </h3>
+
+                              <div className="space-y-2 p-2 bg-gray-100">
+                                <div className="space-y-1">
+                                  <p className="font-medium">Input:</p>
+                                  <p className="bg-gray-200 px-2 py-1">{testCase.input}</p>
+                                </div>
+                                <div className="space-y-1">
+                                  <p className="font-medium">Expected Output:</p>
+                                  <p className="bg-gray-200 px-2 py-1">
+                                    {testCase.expected_output}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                        )
+                    }
+                  </div>
+
+                  <CodingQuestion question={question} />
                 </div>
-
           }
 
           <div className="py-6">
@@ -359,12 +671,11 @@ export const Questioncompo: React.FC<QuestionComponentProps> = ({
             </div>
 
 
-            {
+            <>{
               useHints &&
               <div className="list-none mt-2 ml-2 space-y-2">
-
-                {
-                  question.hints.map((hint, index) => (
+                {question.hints && question.hints.length > 0 ?
+                  (question.hints.map((hint, index) => (
                     <Collapsible
                       key={index}
                       open={openHints[index]}
@@ -375,7 +686,7 @@ export const Questioncompo: React.FC<QuestionComponentProps> = ({
                         {
                           !openHints[index] &&
                           <AlertDialog>
-                            <AlertDialogTrigger className='text-lg font-semibold'>+</AlertDialogTrigger>
+                            <AlertDialogTrigger className='text-lg font-semibold'><span className="hover:bg-gray-200 dark:bg-gray-600 p-2 rounded-full">+</span></AlertDialogTrigger>
                             <AlertDialogContent>
                               <AlertDialogHeader>
                                 <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
@@ -399,10 +710,12 @@ export const Questioncompo: React.FC<QuestionComponentProps> = ({
                       </CollapsibleContent>
                     </Collapsible>
                   ))
+                  )
+                  :
+                  <p className="text-muted-foreground italic px-4 py-2">No hints available for this question.</p>
                 }
-
               </div>
-            }
+            }</>
           </div>
         </>
       }
@@ -793,7 +1106,7 @@ const MainTestPage: React.FC<MainTestPageProps> = ({
 }) => {
   const [currentQuestion, setCurrentQuestion] = useState<number>(1);
   const navigate = useNavigate();
-  const {testId} = useParams();
+  const { testId } = useParams();
   const { Test, statusOfQuestion, setStatusOfQuestion, answersOfQuestions, setAnswersOfQuestions } = useStudentTestPage();
 
   // Include into Marked for review
@@ -889,10 +1202,6 @@ const MainTestPage: React.FC<MainTestPageProps> = ({
               <Questioncompo
                 question={Test.testQuestions?.[currentQuestion - 1]}
                 currentQuestion={currentQuestion}
-                answersOfQuestions={answersOfQuestions}
-                setAnswersOfQuestions={setAnswersOfQuestions}
-                statusOfQuestion={statusOfQuestion}
-                setStatusOfQuestion={setStatusOfQuestion}
               />
             </ScrollArea>
           </div>
@@ -1142,8 +1451,8 @@ export const TestPageHelper: React.FC = () => {
       } catch (fallbackErr) {
         console.error('Fallback fullscreen failed:', fallbackErr);
         setFullscreenError(`
-          Please add full screen mode manually, using f11 key!
-        `);
+                                  Please add full screen mode manually, using f11 key!
+                                  `);
       }
     }
   };
