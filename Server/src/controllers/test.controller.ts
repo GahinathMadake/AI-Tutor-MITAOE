@@ -1,7 +1,10 @@
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { ApiResponse, AuthenticatedRequest } from '../types/auth';
 import { testService } from '../services/test.services';
-import { TestHistoryDashboardData } from '@/types/test';
+import { MulterRequest, TestHistoryDashboardData } from '@/types/test';
+import { AppError } from '@/errors/ApiError';
+import axios, { AxiosError } from 'axios';
+import FormData from 'form-data';
 
 class StudentTestController {
 
@@ -9,277 +12,163 @@ class StudentTestController {
         const user = req.user!;
         const testId = req.query.testId as string;
 
-        const {testData, testStatusData} = await testService.getTestBasicDetails(user.id, testId);
+        const { testData, testStatusData } = await testService.getTestBasicDetails(user.id, testId);
 
         const test = testData.data[0];
         test.testStatuses = testStatusData.data;
 
         const response = {
             success: true,
-            data: { test:test }
+            data: { test: test }
         };
 
-        res.status(200).json(response);
+        return res.status(200).json(response);
     }
 
     async getTestAnalytics(req: AuthenticatedRequest, res: Response) {
         const user = req.user!;
         const testId = req.query.testId as string;
 
-        const {submissionData} = await testService.getTestAnalytics(user.id, testId)
+        const { submissionData } = await testService.getTestAnalytics(user.id, testId)
 
 
         const response: ApiResponse = {
             success: true,
-            data: { submission:submissionData.data }
+            data: { submission: submissionData.data }
         };
 
-        res.status(200).json(response);
+        return res.status(200).json(response);
     }
 
     async getTest(req: AuthenticatedRequest, res: Response) {
         const user = req.user!;
         const testId = req.query.testId as string;
 
-        const test = {
-            id: "test_123",
-            name: "Midterm Assessment",
-            totalMarks: 100,
-            duration: 60,
-            maxAttempts: 1,
-            startTime: "2025-08-15T09:00:00Z",
-            endTime: "2025-08-15T10:00:00Z",
-            course: {
-                id: "course_001",
-                name: "Advanced JavaScript",
-            },
-            topic: {
-                id: "topic_005",
-                name: "Asynchronous Programming",
-            },
-            testQuestions: [
-                {
-                    question: {
-                        id: "q1",
-                        text: "What is the purpose of async/await in JavaScript?",
-                        level: "medium",
-                        type: "multiple-choice",
-                        options: [
-                            "To make functions synchronous",
-                            "To handle promises more cleanly",
-                            "To loop through arrays",
-                            "To call external APIs only"
-                        ],
-                        hints: ["Think about promise chaining replacement"]
-                    }
-                },
-                {
-                    question: {
-                        id: "q2",
-                        text: "Which method is used to catch errors in async functions?",
-                        level: "easy",
-                        type: "single-choice",
-                        options: [
-                            ".then()",
-                            ".finally()",
-                            "try/catch block",
-                            ".map()"
-                        ],
-                        hints: ["You use it with try in synchronous code too"]
-                    }
-                },
-                {
-                    question: {
-                        id: "q3",
-                        text: "Match the async term with its description",
-                        level: "hard",
-                        type: "match-the-following",
-                        options: [
-                            "Promise → Represents a future value",
-                            "async → Declares a function returns a Promise",
-                            "await → Waits for a Promise to resolve",
-                            "callback → Function passed into another function"
-                        ],
-                        hints: ["Relate to how JS handles concurrency"]
-                    }
-                }
-            ]
-        };
+        const { testData, testQuestions } = await testService.getTest(user.id, testId);
 
-
-
+        const test = testData.data[0];
+        test.testQuestions = testQuestions.data;
         const response: ApiResponse = {
             success: true,
             data: { test }
         };
 
-        res.status(200).json(response);
+        return res.status(200).json(response);
     }
 
     async startTest(req: AuthenticatedRequest, res: Response) {
         const user = req.user!;
         const testId = req.query.testId as string;
 
-        const submissions = [
-            {
-                id: "sub_1",
-                studentId: "user_123",
-                testId: "test_456",
-                questionId: "q_789",
-                answer: "React component lifecycle",
-                marksObtained: 5,
-                hintsUsed: 0,
-                submittedAt: "2023-11-15T09:30:00Z",
-                question: {
-                    id: "q_789",
-                    questionText: "Explain component lifecycle methods in React",
-                    correctAnswer: "mounting, updating, unmounting",
-                    marks: 5,
-                    hints: ["Think about the three main phases"]
-                }
-            },
-            {
-                id: "sub_2",
-                studentId: "user_123",
-                testId: "test_456",
-                questionId: "q_790",
-                answer: null,
-                marksObtained: 0,
-                hintsUsed: 1,
-                submittedAt: "2023-11-15T09:35:00Z",
-                question: {
-                    id: "q_790",
-                    questionText: "What is JSX?",
-                    correctAnswer: "JavaScript XML",
-                    marks: 5,
-                    hints: ["Acronym expansion"]
-                }
-            }
-        ]
+        const { testStatusData } = await testService.startTest(user.id, testId);
 
+        if (!testStatusData.success) {
+            throw new AppError("Internal Server error!", 500);
+        }
 
         const response: ApiResponse = {
             success: true,
-            data: { submissions }
+            message: "Test Started Succeefully!",
         };
 
-        res.status(200).json(response);
+        return res.status(200).json(response);
     }
 
     async submitTest(req: AuthenticatedRequest, res: Response) {
         const user = req.user!;
-        const testId = req.query.testId as string;
+        const { answersOfQuestions, testId, courseId, cheatingReason } = req.body;
 
-        const submissions = [
-            {
-                id: "sub_1",
-                studentId: "user_123",
-                testId: "test_456",
-                questionId: "q_789",
-                answer: "React component lifecycle",
-                marksObtained: 5,
-                hintsUsed: 0,
-                submittedAt: "2023-11-15T09:30:00Z",
-                question: {
-                    id: "q_789",
-                    questionText: "Explain component lifecycle methods in React",
-                    correctAnswer: "mounting, updating, unmounting",
-                    marks: 5,
-                    hints: ["Think about the three main phases"]
-                }
-            },
-            {
-                id: "sub_2",
-                studentId: "user_123",
-                testId: "test_456",
-                questionId: "q_790",
-                answer: null,
-                marksObtained: 0,
-                hintsUsed: 1,
-                submittedAt: "2023-11-15T09:35:00Z",
-                question: {
-                    id: "q_790",
-                    questionText: "What is JSX?",
-                    correctAnswer: "JavaScript XML",
-                    marks: 5,
-                    hints: ["Acronym expansion"]
-                }
-            }
-        ]
-
+        await testService.submitTest(user.id, testId, courseId, cheatingReason, answersOfQuestions);
 
         const response: ApiResponse = {
             success: true,
-            data: { submissions }
+            message: "Test Submitted Successfully!"
         };
 
-        res.status(200).json(response);
+        return res.status(200).json(response);
     }
 
-    async analyseImage(req: AuthenticatedRequest, res: Response) {
-        const user = req.user!;
-        const testId = req.query.testId as string;
-
-        const submissions = [
-            {
-                id: "sub_1",
-                studentId: "user_123",
-                testId: "test_456",
-                questionId: "q_789",
-                answer: "React component lifecycle",
-                marksObtained: 5,
-                hintsUsed: 0,
-                submittedAt: "2023-11-15T09:30:00Z",
-                question: {
-                    id: "q_789",
-                    questionText: "Explain component lifecycle methods in React",
-                    correctAnswer: "mounting, updating, unmounting",
-                    marks: 5,
-                    hints: ["Think about the three main phases"]
-                }
-            },
-            {
-                id: "sub_2",
-                studentId: "user_123",
-                testId: "test_456",
-                questionId: "q_790",
-                answer: null,
-                marksObtained: 0,
-                hintsUsed: 1,
-                submittedAt: "2023-11-15T09:35:00Z",
-                question: {
-                    id: "q_790",
-                    questionText: "What is JSX?",
-                    correctAnswer: "JavaScript XML",
-                    marks: 5,
-                    hints: ["Acronym expansion"]
-                }
+    async analyseImage(req: MulterRequest, res: Response): Promise<Response> {
+        try {
+            if (!req.file) {
+                return res.status(400).json({ success: false, message: 'No image provided' });
             }
-        ]
 
+            const formData = new FormData();
+            formData.append('image', req.file.buffer, {
+                filename: req.file.originalname || 'capture.jpg',
+                contentType: req.file.mimetype || 'image/jpeg'
+            });
 
-        const response: ApiResponse = {
-            success: true,
-            data: { submissions }
-        };
+            const response = await axios.post('https://api.worqhat.com/api/ai/images/v2/face-detection', formData, {
+                headers: {
+                    Authorization: `Bearer ${process.env.WORQHAT_API_KEY}`,
+                    ...formData.getHeaders(),
+                },
+                maxContentLength: Infinity,
+                maxBodyLength: Infinity,
+            });
 
-        res.status(200).json(response);
-    }
+            const resData = response.data;
+
+            if (Array.isArray(resData?.data)) {
+                return res.status(200).json({
+                    success: true,
+                    message: 'Face analysis successful',
+                    data: {
+                        numberOfPeople: resData.data.length,
+                    },
+                });
+            }
+
+            return res.status(400).json({
+                success: false,
+                message: resData?.message || 'Face analysis failed',
+                code: response.status,
+            });
+
+        } catch (error) {
+            const axiosError = error as AxiosError;
+
+            console.error('Full Error:', error);
+
+            if (axiosError.response) {
+                console.error('API Response Error:', {
+                    status: axiosError.response.status,
+                    data: axiosError.response.data,
+                    headers: axiosError.response.headers
+                });
+
+                return res.status(axiosError.response.status).json({
+                    success: false,
+                    message: (axiosError.response.data as any)?.error || 'Processing failed',
+                    details: axiosError.response.data,
+                });
+            }
+
+            return res.status(500).json({
+                success: false,
+                message: 'Unexpected server error',
+                details: axiosError.message,
+            });
+        }
+    };
+
 
     async getTestHistoryDashboardData(req: AuthenticatedRequest, res: Response) {
         const user = req.user!;
 
-        const {testHistory, results} = await testService.getTestHistoryDashboardData(user.id);
+        const { testHistory, results } = await testService.getTestHistoryDashboardData(user.id);
 
-        const history:TestHistoryDashboardData  = testHistory.data[0];
+        const history: TestHistoryDashboardData = testHistory.data[0];
         history.monthWiseTestAttempted = results;
 
         const response: ApiResponse = {
             success: true,
-            data: { dashboard:history}
+            data: { dashboard: history }
         };
 
-        res.status(200).json(response);
+        return res.status(200).json(response);
     }
 
     async getTestHistoryData(req: AuthenticatedRequest, res: Response) {
@@ -294,7 +183,7 @@ class StudentTestController {
             data: { testHistory: testHistory.data }
         };
 
-        res.status(200).json(response);
+        return res.status(200).json(response);
     }
 
 }

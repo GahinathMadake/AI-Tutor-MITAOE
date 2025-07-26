@@ -3,19 +3,10 @@ export interface TestType {
   name: string;
   duration: number;
 
-  course:{
-    id:string;
-    name:string;
-  };
-
+  courseName:string;
+  courseId:string;
   topicName: string;
-  testQuestions: TestQuestion[];
-}
-
-export interface TestQuestion {
-  id: string;
-  question: Question;
-  marks: number;
+  testQuestions: Question[];
 }
 
 export interface Question {

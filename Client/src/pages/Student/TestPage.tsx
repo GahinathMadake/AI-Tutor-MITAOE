@@ -863,7 +863,7 @@ const MainTestPage: React.FC<MainTestPageProps> = ({
       {/* Sticky Header */}
       <div className="sticky top-0 w-full h-[40px] p-[5px] bg-sidebar border-b z-30 flex gap-3 justify-center">
         <Badge>{Test.name}</Badge>
-        <h1 className="text-xl font-bold text-center">{Test.course.name} - {Test.topicName}</h1>
+        <h1 className="text-xl font-bold text-center">{Test.courseName} - {Test.topicName}</h1>
       </div>
 
       {/* Main Content */}
@@ -887,7 +887,7 @@ const MainTestPage: React.FC<MainTestPageProps> = ({
           <div style={{ height: "calc(100vh - 50px)" }}>
             <ScrollArea className="w-full h-full pb-[100px]">
               <Questioncompo
-                question={Test.testQuestions?.[currentQuestion - 1].question}
+                question={Test.testQuestions?.[currentQuestion - 1]}
                 currentQuestion={currentQuestion}
                 answersOfQuestions={answersOfQuestions}
                 setAnswersOfQuestions={setAnswersOfQuestions}
@@ -905,7 +905,7 @@ const MainTestPage: React.FC<MainTestPageProps> = ({
                 className={`rounded-full bg-blue-500 hover:bg-blue-600`}
                 onClick={
                   async () => {
-                    clearQuestionOption(Test.testQuestions?.[currentQuestion - 1].question.id as string);
+                    clearQuestionOption(Test.testQuestions?.[currentQuestion - 1].id as string);
                   }
                 }
               >
@@ -916,7 +916,7 @@ const MainTestPage: React.FC<MainTestPageProps> = ({
                 className={`rounded-full bg-yellow-500 hover:bg-yellow-600`}
                 onClick={
                   async () => {
-                    handleMarkForReview(Test.testQuestions?.[currentQuestion - 1].question.id as string)
+                    handleMarkForReview(Test.testQuestions?.[currentQuestion - 1].id as string)
                   }
                 }
               >
@@ -927,7 +927,7 @@ const MainTestPage: React.FC<MainTestPageProps> = ({
                 className={`rounded-full bg-green-500 hover:bg-green-600`}
                 onClick={
                   async () => {
-                    removeFromReview(Test.testQuestions?.[currentQuestion - 1].question.id as string)
+                    removeFromReview(Test.testQuestions?.[currentQuestion - 1].id as string)
                   }
                 }
               >
@@ -991,15 +991,15 @@ const MainTestPage: React.FC<MainTestPageProps> = ({
                         ?
                         "bg-blue-500 hover:bg-blue-600"
                         :
-                        statusOfQuestion[testQuestion.question.id] === 2
+                        statusOfQuestion[testQuestion.id] === 2
                           ?
                           "bg-yellow-500 hover:bg-yellow-600"
                           :
-                          statusOfQuestion[testQuestion.question.id] === 1
+                          statusOfQuestion[testQuestion.id] === 1
                             ?
                             "bg-green-500 hover:bg-green-600"
                             :
-                            statusOfQuestion[testQuestion.question.id] === 3
+                            statusOfQuestion[testQuestion.id] === 3
                               ?
                               "bg-red-500 hover:bg-red-600"
                               :

@@ -153,7 +153,7 @@ export const StudentTestPageProvider: React.FC<{ children: React.ReactNode }> = 
 
                 if (Test?.testQuestions) {
                     Test.testQuestions.forEach((testQuestion) => {
-                        const qId = testQuestion.question.id;
+                        const qId = testQuestion.id;
                         initialAnswers[qId] = { answer: "", hints: [] };
                         initialStatus[qId] = 4;
                     });
@@ -186,7 +186,7 @@ export const StudentTestPageProvider: React.FC<{ children: React.ReactNode }> = 
         testId: string
     ): Promise<{ success: boolean; message: string }> => {
 
-        const courseId = Test?.course?.id as string;
+        const courseId = Test?.courseId as string;
 
         if (!testId || !courseId) {
             return { success: false, message: "Missing required fields." };
@@ -209,7 +209,7 @@ export const StudentTestPageProvider: React.FC<{ children: React.ReactNode }> = 
 
             const result = await response.json();
 
-            if (response.ok && result.success) {
+            if (result.success) {
                 const storageKey = `test_${testId}_user_${user.id}`;
                 localStorage.removeItem(storageKey);
 
